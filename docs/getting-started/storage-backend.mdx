@@ -1,0 +1,55 @@
+---
+sidebar_position: 4
+---
+
+# Storage and Auto-Save
+
+## LocalStorage
+```tsx
+import { createLocalStorageManager } from '@scinforma/picolms';
+
+const storage = createLocalStorageManager('user-123');
+
+<Quiz 
+  config={quizConfig}
+  storageManager={storage}
+  autoSaveInterval={2000}  // Auto-save every 2 seconds (0 = disabled)
+  onQuizSubmit={(result) => console.log(result)}
+/>
+```
+
+## Backend API
+```tsx
+import { createApiStorageManager } from '@scinforma/picolms';
+
+const storage = createApiStorageManager(
+  'https://api.yourapp.com',
+  'user-123',
+  'your-api-key'
+);
+
+<Quiz 
+  config={quizConfig}
+  storageManager={storage}
+  autoSaveInterval={5000}
+/>
+```
+
+## Custom API Endpoints
+```tsx
+import { ApiQuizAdapter, QuizStorageManager } from '@scinforma/picolms';
+
+const adapter = new ApiQuizAdapter({
+  baseUrl: 'https://api.yourapp.com',
+  userId: 'user-123',
+  apiKey: 'your-key',
+  endpoints: {
+    save: '/v1/quiz/save',
+    load: '/v1/quiz/load',
+    loadAll: '/v1/quiz/list',
+    delete: '/v1/quiz/delete',
+  },
+});
+
+const storage = new QuizStorageManager({ adapter, userId: 'user-123' });
+```
