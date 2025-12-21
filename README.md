@@ -1,41 +1,13 @@
-# Website
+# Pico LMS Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+This is documentation website for PicoLMS. This site is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-## Installation
+## About Pico LMS
 
-```bash
-yarn
-```
+A lightweight React component library for building learning management systems with full TypeScript support.
 
-## Local Development
+Demo - [https://berkesas.github.io/picolms/](https://berkesas.github.io/picolms/)
+Documentation - [https://berkesas.github.io/picolms-docs/](https://berkesas.github.io/picolms-docs/)
 
-```bash
-yarn start
-```
-
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-## Build
-
-```bash
-yarn build
-```
-
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-## Deployment
-
-Using SSH:
-
-```bash
-USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+[![npm version](https://badge.fury.io/js/@scinforma%2Fpicolms.svg)](https://www.npmjs.com/package/@scinforma/picolms)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
