@@ -18,12 +18,12 @@ const config: Config = {
   url: 'https://berkesas.github.io/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/picolms-docs/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'berkesas', // Usually your GitHub org/user name.
-  projectName: 'picolms', // Usually your repo name.
+  projectName: 'picolms-docs', // Usually your repo name.
 
   onBrokenLinks: 'throw',
 
