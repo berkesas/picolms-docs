@@ -1,0 +1,107 @@
+---
+sidebar_position: 2
+---
+
+# True or False Question
+
+Configuration and display of a single True-or-False question. 
+
+You can use it inline in React or in .mdx format files.
+
+## Code
+
+```tsx
+import { useState } from 'react';
+import { TrueOrFalse, QuestionAnswer } from '@scinforma/picolms';
+import "@scinforma/picolms/styles.css";
+
+export function MyQuestion() {
+  const config = {
+    id: 'tf-1',
+    type: 'true-false',
+    question: 'The Earth is flat.',
+    points: 5,
+    correctAnswer: false,
+    displayAs: 'radio',
+    feedback: {
+      correct: {
+        type: 'correct',
+        message: 'Correct! The Earth is round.',
+      },
+      incorrect: {
+        type: 'incorrect',
+        message: 'Incorrect. The Earth is actually round.',
+      },
+    },
+  };
+
+  const [answer, setAnswer] = useState();
+  const [feedback, setFeedback] = useState();
+
+  const handleAnswerChange = (ans) => {
+    const result = ans.value==config.correctAnswer ? config.feedback.correct.message : config.feedback.incorrect.message;
+    setFeedback(result);
+    setAnswer(ans)
+  };
+
+  return (
+      <div>
+      <TrueOrFalse
+        config={config}
+        onAnswerChange={handleAnswerChange}
+        showFeedback={true}
+      />
+      <div>{feedback}</div>
+    </div>
+  );
+}
+```
+
+## Result
+
+import { useState } from 'react';
+import { TrueOrFalse, QuestionAnswer } from '@scinforma/picolms';
+import "@scinforma/picolms/styles.css";
+
+export function MyQuestion() {
+  const config = {
+    id: 'tf-1',
+    type: 'true-false',
+    question: 'The Earth is flat.',
+    points: 5,
+    correctAnswer: false,
+    displayAs: 'radio',
+    feedback: {
+      correct: {
+        type: 'correct',
+        message: 'Correct! The Earth is round.',
+      },
+      incorrect: {
+        type: 'incorrect',
+        message: 'Incorrect. The Earth is actually round.',
+      },
+    },
+  };
+
+  const [answer, setAnswer] = useState();
+  const [feedback, setFeedback] = useState();
+
+  const handleAnswerChange = (ans) => {
+    const result = ans.value==config.correctAnswer ? config.feedback.correct.message : config.feedback.incorrect.message;
+    setFeedback(result);
+    setAnswer(ans)
+  };
+
+  return (
+      <div>
+      <TrueOrFalse
+        config={config}
+        onAnswerChange={handleAnswerChange}
+        showFeedback={true}
+      />
+      <div>{feedback}</div>
+    </div>
+  );
+}
+
+<MyQuestion/>

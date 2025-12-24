@@ -1,0 +1,77 @@
+---
+sidebar_position: 1
+---
+
+# Multiple Choice Question
+
+Simple configuration and display of one multiple choice question. 
+
+You can use it inline in React or in .mdx format files.
+
+## Code
+
+```tsx
+import { MultipleChoice } from '@scinforma/picolms';
+import "@scinforma/picolms/styles.css";
+
+export function MyQuestion() {
+  const config = {
+    id: 'q1',
+    type: 'multiple-choice',
+    question: 'What is the capital of France?',
+    points: 10,
+    options: [
+      { id: '1', text: 'London', isCorrect: false, feedback: 'Incorrect. London is not in France.' },
+      { id: '2', text: 'Paris', isCorrect: true, feedback:'Correct. Paris is the right answer.' },
+      { id: '3', text: 'Berlin', isCorrect: false, feedback: 'Incorrect. Berlin is in Germany.' },
+      { id: '4', text: 'Madrid', isCorrect: false, feedback:'Incorrect. Madrid is in Spain' },
+    ],
+    allowMultiple: false,
+    shuffleOptions: true
+  };
+
+
+
+  return (
+    <MultipleChoice 
+      config={config}
+      onAnswerChange={(answer) => console.log(answer)}
+      showFeedback={true}
+    />
+  );
+}
+```
+
+## Result
+
+import { MultipleChoice } from '@scinforma/picolms';
+import "@scinforma/picolms/styles.css";
+
+export function MyQuestion() {
+  const config = {
+    id: 'q1',
+    type: 'multiple-choice',
+    question: 'What is the capital of France?',
+    points: 10,
+    options: [
+      { id: '1', text: 'London', isCorrect: false, feedback: 'Incorrect. London is not in France.' },
+      { id: '2', text: 'Paris', isCorrect: true, feedback:'Correct. Paris is the right answer.' },
+      { id: '3', text: 'Berlin', isCorrect: false, feedback: 'Incorrect. Berlin is in Germany.' },
+      { id: '4', text: 'Madrid', isCorrect: false, feedback:'Incorrect. Madrid is in Spain' },
+    ],
+    allowMultiple: false,
+    shuffleOptions: true
+  };
+
+
+
+  return (
+    <MultipleChoice 
+      config={config}
+      onAnswerChange={(answer) => console.log(answer)}
+      showFeedback={true}
+    />
+  );
+}
+
+<MyQuestion/>
