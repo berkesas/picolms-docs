@@ -3,6 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+const isProduction = process.env.NODE_ENV === 'production';
 
 const config: Config = {
   title: 'Pico LMS',
@@ -64,6 +65,10 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        gtag: isProduction ? {
+          trackingID: 'G-DN7GM38E7K',
+          anonymizeIP: true,
+        } : undefined,
       } satisfies Preset.Options,
     ],
   ],
@@ -138,7 +143,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Scinforma, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © 2025-${new Date().getFullYear()} Scinforma, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

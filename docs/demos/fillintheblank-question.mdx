@@ -1,0 +1,124 @@
+---
+sidebar_position: 4
+---
+
+# Fill in the Blank Question
+
+Configuration for a question with a blank to be filled. 
+
+You can use it inline in React or in .mdx format files.
+
+## Code
+
+```tsx
+import { useState } from 'react';
+import { FillInBlank } from '@scinforma/picolms';
+import "@scinforma/picolms/styles.css";
+
+export function MyQuestion() {
+  const config = {
+    id: 'fib-1',
+    type: 'fill-in-blank',
+    question: 'Complete the sentence',
+    instructions: 'Fill in the blanks with the correct words',
+    points: 15,
+    segments: [
+      { type: 'text', content: 'The ' },
+      {
+        type: 'blank',
+        id: 'blank1',
+        correctAnswers: ['quick', 'fast'],
+        placeholder: '___',
+      },
+      { type: 'text', content: ' brown ' },
+      {
+        type: 'blank',
+        id: 'blank2',
+        correctAnswers: ['fox'],
+        placeholder: '___',
+      },
+      { type: 'text', content: ' jumps over the lazy ' },
+      {
+        type: 'blank',
+        id: 'blank3',
+        correctAnswers: ['dog'],
+        placeholder: '___',
+      },
+      { type: 'text', content: '.' },
+    ],
+  };
+
+  const [answer, setAnswer] = useState();
+
+  return (
+    <div className="example-container">
+      <h2>Fill in the Blank Example</h2>
+      <FillInBlank config={config} onAnswerChange={(ans) => setAnswer(ans)} />
+      <div className="example-output">
+        <h3>Current Answer:</h3>
+        <pre>{JSON.stringify(answer?.value, null, 2)}</pre>
+        <h3>Is Answered:</h3>
+        <pre>{answer?.isAnswered ? 'Yes' : 'No'}</pre>
+      </div>
+    </div>
+  );
+}
+
+<MyQuestion/>
+```
+
+## Result
+
+import { useState } from 'react';
+import { FillInBlank } from '@scinforma/picolms';
+import "@scinforma/picolms/styles.css";
+
+export function MyQuestion() {
+  const config = {
+    id: 'fib-1',
+    type: 'fill-in-blank',
+    question: 'Complete the sentence',
+    instructions: 'Fill in the blanks with the correct words',
+    points: 15,
+    segments: [
+      { type: 'text', content: 'The ' },
+      {
+        type: 'blank',
+        id: 'blank1',
+        correctAnswers: ['quick', 'fast'],
+        placeholder: '___',
+      },
+      { type: 'text', content: ' brown ' },
+      {
+        type: 'blank',
+        id: 'blank2',
+        correctAnswers: ['fox'],
+        placeholder: '___',
+      },
+      { type: 'text', content: ' jumps over the lazy ' },
+      {
+        type: 'blank',
+        id: 'blank3',
+        correctAnswers: ['dog'],
+        placeholder: '___',
+      },
+      { type: 'text', content: '.' },
+    ],
+  };
+
+  const [answer, setAnswer] = useState();
+
+  return (
+    <div>
+      <FillInBlank config={config} onAnswerChange={(ans) => setAnswer(ans)} />
+      <div>
+        <h3>Current Answer:</h3>
+        <pre>{JSON.stringify(answer?.value, null, 2)}</pre>
+        <h3>Is Answered:</h3>
+        <pre>{answer?.isAnswered ? 'Yes' : 'No'}</pre>
+      </div>
+    </div>
+  );
+}
+
+<MyQuestion/>

@@ -39,8 +39,7 @@ export function MyQuestion() {
   const [feedback, setFeedback] = useState();
 
   const handleAnswerChange = (ans) => {
-    const result = ans.value==config.correctAnswer ? config.feedback.correct.message : config.feedback.incorrect.message;
-    setFeedback(result);
+    console.log(ans);
     setAnswer(ans)
   };
 
@@ -50,11 +49,13 @@ export function MyQuestion() {
         config={config}
         onAnswerChange={handleAnswerChange}
         showFeedback={true}
+        showCheckButton={true}
       />
-      <div>{feedback}</div>
     </div>
   );
 }
+
+<MyQuestion/>
 ```
 
 ## Result
@@ -87,8 +88,7 @@ export function MyQuestion() {
   const [feedback, setFeedback] = useState();
 
   const handleAnswerChange = (ans) => {
-    const result = ans.value==config.correctAnswer ? config.feedback.correct.message : config.feedback.incorrect.message;
-    setFeedback(result);
+    console.log(ans);
     setAnswer(ans)
   };
 
@@ -98,8 +98,8 @@ export function MyQuestion() {
         config={config}
         onAnswerChange={handleAnswerChange}
         showFeedback={true}
+        showCheckButton={true}
       />
-      <div>{feedback}</div>
     </div>
   );
 }
