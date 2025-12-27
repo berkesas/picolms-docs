@@ -1,6 +1,6 @@
 {
   "name": "picolms-docs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -18,9 +18,11 @@
   "dependencies": {
     "@docusaurus/core": "3.9.2",
     "@docusaurus/plugin-google-gtag": "^3.9.2",
+    "@docusaurus/plugin-ideal-image": "^3.9.2",
     "@docusaurus/preset-classic": "3.9.2",
+    "@docusaurus/theme-search-algolia": "^3.9.2",
     "@mdx-js/react": "^3.0.0",
-    "@scinforma/picolms": "^0.1.7",
+    "@scinforma/picolms": "^0.1.8",
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",

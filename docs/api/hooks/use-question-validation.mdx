@@ -1,0 +1,982 @@
+---
+id: use-question-validation
+title: useQuestionValidation
+sidebar_label: useQuestionValidation
+---
+
+# useQuestionValidation
+
+A React hook for validating question answers with support for built-in and custom validation rules, real-time validation, and comprehensive error handling.
+
+## Overview
+
+`useQuestionValidation` handles:
+
+- **Rule-based Validation**: Support for required, length, pattern, and custom rules
+- **Async Validation**: Handle asynchronous validation functions
+- **Real-time Validation**: Validate on change or manually trigger validation
+- **Error Management**: Track validation errors and warnings
+- **Validation State**: Monitor validation progress with loading state
+- **Callback Support**: Notify parent components of validation changes
+
+## Import
+
+```tsx
+import { useQuestionValidation } from './hooks/useQuestionValidation';
+import type { 
+  UseQuestionValidationOptions, 
+  UseQuestionValidationReturn,
+  ValidationRule,
+  ValidationResult 
+} from './hooks/useQuestionValidation';
+```
+
+## Basic Usage
+
+```tsx
+import { useQuestionValidation } from './hooks/useQuestionValidation';
+
+function EmailQuestion({ value, onChange }) {
+  const {
+    validation,
+    validate,
+    isValidating,
+  } = useQuestionValidation({
+    value,
+    rules: [
+      { type: 'required', message: 'Email is required' },
+      { 
+        type: 'pattern', 
+        value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+        message: 'Invalid email format' 
+      },
+    ],
+  });
+
+  return (
+    <div>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {validation.errors.map((error, i) => (
+        <p key={i} className="error">{error}</p>
+      ))}
+      <button onClick={validate} disabled={isValidating}>
+        Validate
+      </button>
+    </div>
+  );
+}
+```
+
+## Parameters
+
+### `options`
+
+**Type**: `UseQuestionValidationOptions<T>`
+
+Configuration object for the hook.
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `value` | `T` | Yes | - | The value to validate |
+| `rules` | `ValidationRule[]` | No | `[]` | Array of validation rules to apply |
+| `validateOnChange` | `boolean` | No | `false` | Whether to validate automatically when value changes |
+| `validateOnBlur` | `boolean` | No | `false` | Whether to validate on blur event (not implemented in hook) |
+| `onValidationChange` | `(result: ValidationResult) => void` | No | - | Callback executed when validation result changes |
+
+### Examples
+
+#### Basic Configuration
+
+```tsx
+const validation = useQuestionValidation({
+  value: answer,
+  rules: [
+    { type: 'required', message: 'This field is required' },
+  ],
+});
+```
+
+#### With Multiple Rules
+
+```tsx
+const validation = useQuestionValidation({
+  value: password,
+  rules: [
+    { type: 'required', message: 'Password is required' },
+    { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+    { type: 'maxLength', value: 32, message: 'Password must be less than 32 characters' },
+    { 
+      type: 'pattern', 
+      value: '(?=.*[A-Z])(?=.*[0-9])',
+      message: 'Password must contain uppercase and numbers' 
+    },
+  ],
+});
+```
+
+#### With Auto-validation
+
+```tsx
+const validation = useQuestionValidation({
+  value: username,
+  rules: [
+    { type: 'required', message: 'Username is required' },
+    { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+  ],
+  validateOnChange: true, // Validate on every change
+});
+```
+
+#### With Validation Callback
+
+```tsx
+const validation = useQuestionValidation({
+  value: answer,
+  rules: questionRules,
+  onValidationChange: (result) => {
+    console.log('Validation changed:', result);
+    if (result.isValid) {
+      enableSubmitButton();
+    } else {
+      disableSubmitButton();
+    }
+  },
+});
+```
+
+#### With Custom Validation
+
+```tsx
+const validation = useQuestionValidation({
+  value: email,
+  rules: [
+    { type: 'required', message: 'Email is required' },
+    {
+      type: 'custom',
+      message: 'Email already exists',
+      validate: async (value) => {
+        const response = await fetch(`/api/check-email?email=${value}`);
+        const data = await response.json();
+        return data.available;
+      },
+    },
+  ],
+});
+```
+
+## Return Value
+
+**Type**: `UseQuestionValidationReturn`
+
+The hook returns an object with the following properties and methods:
+
+### Properties
+
+#### `validation`
+- **Type**: `ValidationResult`
+- **Description**: Current validation result containing validity status, errors, and warnings
+```tsx
+const { validation } = useQuestionValidation(options);
+
+console.log(validation);
+// {
+//   isValid: false,
+//   errors: ['This field is required', 'Invalid format'],
+//   warnings: []
+// }
+```
+
+#### `isValidating`
+- **Type**: `boolean`
+- **Description**: Whether validation is currently in progress (useful for async validations)
+```tsx
+const { isValidating } = useQuestionValidation(options);
+
+if (isValidating) {
+  console.log('Validation in progress...');
+}
+```
+
+### Methods
+
+#### `validate()`
+- **Type**: `() => Promise<ValidationResult>`
+- **Description**: Manually trigger validation and return the result
+```tsx
+const { validate } = useQuestionValidation(options);
+
+// Trigger validation manually
+const handleSubmit = async () => {
+  const result = await validate();
+  if (result.isValid) {
+    submitForm();
+  }
+};
+```
+
+#### `clearValidation()`
+- **Type**: `() => void`
+- **Description**: Clear all validation errors and reset to valid state
+```tsx
+const { clearValidation } = useQuestionValidation(options);
+
+// Reset validation state
+const handleReset = () => {
+  clearValidation();
+  resetForm();
+};
+```
+
+## Validation Rules
+
+### ValidationRule Interface
+
+```typescript
+interface ValidationRule {
+  type: 'required' | 'minLength' | 'maxLength' | 'pattern' | 'custom';
+  message: string;
+  value?: number | string;
+  validate?: (value: any) => boolean | Promise<boolean>;
+}
+```
+
+### Built-in Rule Types
+
+#### `required`
+Validates that the value is not null, undefined, or empty string.
+
+```tsx
+{
+  type: 'required',
+  message: 'This field is required'
+}
+```
+
+#### `minLength`
+Validates that a string value has at least the specified length.
+
+```tsx
+{
+  type: 'minLength',
+  value: 5,
+  message: 'Must be at least 5 characters'
+}
+```
+
+#### `maxLength`
+Validates that a string value does not exceed the specified length.
+
+```tsx
+{
+  type: 'maxLength',
+  value: 100,
+  message: 'Must be less than 100 characters'
+}
+```
+
+#### `pattern`
+Validates that a string value matches the specified regex pattern.
+
+```tsx
+{
+  type: 'pattern',
+  value: '^[a-zA-Z0-9]+$',
+  message: 'Only alphanumeric characters allowed'
+}
+```
+
+#### `custom`
+Executes a custom validation function (sync or async).
+
+```tsx
+{
+  type: 'custom',
+  message: 'Custom validation failed',
+  validate: async (value) => {
+    // Return true if valid, false if invalid
+    return await checkCustomRule(value);
+  }
+}
+```
+
+## ValidationResult Object
+
+```typescript
+interface ValidationResult {
+  isValid: boolean;      // Overall validity status
+  errors: string[];      // Array of error messages
+  warnings: string[];    // Array of warning messages
+}
+```
+
+## Examples
+
+### Short Answer with Basic Validation
+
+```tsx
+function ShortAnswerQuestion() {
+  const [answer, setAnswer] = useState('');
+
+  const {
+    validation,
+    validate,
+    clearValidation,
+  } = useQuestionValidation({
+    value: answer,
+    rules: [
+      { type: 'required', message: 'Answer is required' },
+      { type: 'minLength', value: 10, message: 'Answer must be at least 10 characters' },
+      { type: 'maxLength', value: 500, message: 'Answer must be less than 500 characters' },
+    ],
+  });
+
+  const handleSubmit = async () => {
+    const result = await validate();
+    if (result.isValid) {
+      submitAnswer(answer);
+    }
+  };
+
+  return (
+    <div>
+      <textarea
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        placeholder="Type your answer here..."
+      />
+      <div className="validation-errors">
+        {validation.errors.map((error, index) => (
+          <p key={index} className="error">{error}</p>
+        ))}
+      </div>
+      <div>
+        <button onClick={handleSubmit}>Submit</button>
+        <button onClick={clearValidation}>Clear Errors</button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Real-time Validation
+
+```tsx
+function EmailInput() {
+  const [email, setEmail] = useState('');
+
+  const {
+    validation,
+    isValidating,
+  } = useQuestionValidation({
+    value: email,
+    rules: [
+      { type: 'required', message: 'Email is required' },
+      {
+        type: 'pattern',
+        value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+        message: 'Please enter a valid email address',
+      },
+    ],
+    validateOnChange: true, // Validate as user types
+  });
+
+  const getInputClassName = () => {
+    if (!email) return '';
+    if (isValidating) return 'validating';
+    return validation.isValid ? 'valid' : 'invalid';
+  };
+
+  return (
+    <div>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className={getInputClassName()}
+      />
+      {isValidating && <span className="spinner">Validating...</span>}
+      {!validation.isValid && (
+        <div className="errors">
+          {validation.errors.map((error, i) => (
+            <p key={i}>{error}</p>
+          ))}
+        </div>
+      )}
+      {validation.isValid && email && (
+        <span className="success">✓ Valid email</span>
+      )}
+    </div>
+  );
+}
+```
+
+### Async Validation with API Check
+
+```tsx
+function UsernameInput() {
+  const [username, setUsername] = useState('');
+
+  const {
+    validation,
+    validate,
+    isValidating,
+  } = useQuestionValidation({
+    value: username,
+    rules: [
+      { type: 'required', message: 'Username is required' },
+      { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+      { type: 'maxLength', value: 20, message: 'Username must be less than 20 characters' },
+      {
+        type: 'pattern',
+        value: '^[a-zA-Z0-9_]+$',
+        message: 'Username can only contain letters, numbers, and underscores',
+      },
+      {
+        type: 'custom',
+        message: 'Username is already taken',
+        validate: async (value) => {
+          const response = await fetch(`/api/check-username?username=${value}`);
+          const data = await response.json();
+          return data.available;
+        },
+      },
+    ],
+  });
+
+  const handleBlur = () => {
+    validate();
+  };
+
+  return (
+    <div>
+      <label>Username</label>
+      <input
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        onBlur={handleBlur}
+      />
+      {isValidating && <span>Checking availability...</span>}
+      {!isValidating && !validation.isValid && (
+        <ul className="error-list">
+          {validation.errors.map((error, i) => (
+            <li key={i}>{error}</li>
+          ))}
+        </ul>
+      )}
+      {!isValidating && validation.isValid && username && (
+        <span className="success">✓ Username available</span>
+      )}
+    </div>
+  );
+}
+```
+
+### Password Strength Validation
+
+```tsx
+function PasswordInput() {
+  const [password, setPassword] = useState('');
+
+  const {
+    validation,
+    validate,
+  } = useQuestionValidation({
+    value: password,
+    rules: [
+      { type: 'required', message: 'Password is required' },
+      { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+      {
+        type: 'pattern',
+        value: '(?=.*[a-z])',
+        message: 'Password must contain at least one lowercase letter',
+      },
+      {
+        type: 'pattern',
+        value: '(?=.*[A-Z])',
+        message: 'Password must contain at least one uppercase letter',
+      },
+      {
+        type: 'pattern',
+        value: '(?=.*[0-9])',
+        message: 'Password must contain at least one number',
+      },
+      {
+        type: 'pattern',
+        value: '(?=.*[!@#$%^&*])',
+        message: 'Password must contain at least one special character',
+      },
+    ],
+    validateOnChange: true,
+  });
+
+  const getStrength = () => {
+    if (!password) return null;
+    const errorCount = validation.errors.length;
+    if (errorCount === 0) return 'strong';
+    if (errorCount <= 2) return 'medium';
+    return 'weak';
+  };
+
+  const strength = getStrength();
+
+  return (
+    <div>
+      <label>Password</label>
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      {strength && (
+        <div className={`strength-indicator ${strength}`}>
+          Strength: {strength}
+        </div>
+      )}
+      {!validation.isValid && (
+        <div className="requirements">
+          <p>Password must contain:</p>
+          <ul>
+            {validation.errors.map((error, i) => (
+              <li key={i}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Form with Multiple Fields
+
+```tsx
+function RegistrationForm() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+  });
+
+  const usernameValidation = useQuestionValidation({
+    value: formData.username,
+    rules: [
+      { type: 'required', message: 'Username is required' },
+      { type: 'minLength', value: 3, message: 'Minimum 3 characters' },
+    ],
+  });
+
+  const emailValidation = useQuestionValidation({
+    value: formData.email,
+    rules: [
+      { type: 'required', message: 'Email is required' },
+      {
+        type: 'pattern',
+        value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+        message: 'Invalid email',
+      },
+    ],
+  });
+
+  const passwordValidation = useQuestionValidation({
+    value: formData.password,
+    rules: [
+      { type: 'required', message: 'Password is required' },
+      { type: 'minLength', value: 8, message: 'Minimum 8 characters' },
+    ],
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate all fields
+    const [usernameResult, emailResult, passwordResult] = await Promise.all([
+      usernameValidation.validate(),
+      emailValidation.validate(),
+      passwordValidation.validate(),
+    ]);
+
+    const allValid = 
+      usernameResult.isValid && 
+      emailResult.isValid && 
+      passwordResult.isValid;
+
+    if (allValid) {
+      submitForm(formData);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          placeholder="Username"
+        />
+        {usernameValidation.validation.errors.map((error, i) => (
+          <p key={i} className="error">{error}</p>
+        ))}
+      </div>
+
+      <div>
+        <input
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          placeholder="Email"
+        />
+        {emailValidation.validation.errors.map((error, i) => (
+          <p key={i} className="error">{error}</p>
+        ))}
+      </div>
+
+      <div>
+        <input
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          placeholder="Password"
+        />
+        {passwordValidation.validation.errors.map((error, i) => (
+          <p key={i} className="error">{error}</p>
+        ))}
+      </div>
+
+      <button type="submit">Register</button>
+    </form>
+  );
+}
+```
+
+### Conditional Validation
+
+```tsx
+function ConditionalValidationForm() {
+  const [formData, setFormData] = useState({
+    accountType: 'personal',
+    companyName: '',
+  });
+
+  // Only validate company name if account type is 'business'
+  const companyValidation = useQuestionValidation({
+    value: formData.companyName,
+    rules: formData.accountType === 'business' 
+      ? [
+          { type: 'required', message: 'Company name is required for business accounts' },
+          { type: 'minLength', value: 2, message: 'Company name must be at least 2 characters' },
+        ]
+      : [],
+    validateOnChange: true,
+  });
+
+  return (
+    <div>
+      <select
+        value={formData.accountType}
+        onChange={(e) => setFormData({ ...formData, accountType: e.target.value })}
+      >
+        <option value="personal">Personal</option>
+        <option value="business">Business</option>
+      </select>
+
+      {formData.accountType === 'business' && (
+        <div>
+          <input
+            value={formData.companyName}
+            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+            placeholder="Company Name"
+          />
+          {companyValidation.validation.errors.map((error, i) => (
+            <p key={i} className="error">{error}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Validation with Callbacks
+
+```tsx
+function QuestionWithValidation({ config, onValidChange }) {
+  const [answer, setAnswer] = useState('');
+
+  const {
+    validation,
+    validate,
+    isValidating,
+  } = useQuestionValidation({
+    value: answer,
+    rules: config.validationRules,
+    onValidationChange: (result) => {
+      // Notify parent component
+      onValidChange(result);
+      
+      // Track analytics
+      if (!result.isValid) {
+        trackEvent('validation_failed', {
+          questionId: config.id,
+          errors: result.errors,
+        });
+      }
+    },
+  });
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <input
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        onBlur={validate}
+      />
+      {isValidating && <span>Validating...</span>}
+      <ValidationDisplay validation={validation} />
+    </div>
+  );
+}
+
+function ValidationDisplay({ validation }) {
+  if (validation.isValid) {
+    return <p className="success">✓ Valid</p>;
+  }
+
+  return (
+    <div className="validation-messages">
+      {validation.errors.map((error, i) => (
+        <p key={i} className="error">✗ {error}</p>
+      ))}
+      {validation.warnings.map((warning, i) => (
+        <p key={i} className="warning">⚠ {warning}</p>
+      ))}
+    </div>
+  );
+}
+```
+
+### Debounced Validation
+
+```tsx
+import { useState, useEffect } from 'react';
+
+function DebouncedValidationInput() {
+  const [value, setValue] = useState('');
+  const [debouncedValue, setDebouncedValue] = useState('');
+
+  // Debounce the value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  const {
+    validation,
+    isValidating,
+  } = useQuestionValidation({
+    value: debouncedValue,
+    rules: [
+      {
+        type: 'custom',
+        message: 'Value already exists',
+        validate: async (val) => {
+          if (!val) return true;
+          const response = await fetch(`/api/check?value=${val}`);
+          return response.ok;
+        },
+      },
+    ],
+    validateOnChange: true,
+  });
+
+  return (
+    <div>
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Type to validate..."
+      />
+      {isValidating && <span>Checking...</span>}
+      {!isValidating && !validation.isValid && (
+        <p className="error">{validation.errors[0]}</p>
+      )}
+      {!isValidating && validation.isValid && debouncedValue && (
+        <p className="success">✓ Available</p>
+      )}
+    </div>
+  );
+}
+```
+
+## Validation Behavior
+
+### Validation Timing
+
+- **Manual Validation**: Call `validate()` to manually trigger validation
+- **Auto-validation**: When `validateOnChange` is `true`, validation runs automatically when `value` changes
+- **Async Validation**: The hook waits for async validation functions to complete before returning results
+
+### Error Handling
+
+- Validation errors are caught and added to the errors array as `"Validation error: {error}"`
+- Each rule is evaluated independently
+- All rules are checked even if some fail
+- Validation stops being in progress (`isValidating: false`) once all rules are evaluated
+
+### State Updates
+
+```
+validate() called
+  ↓
+isValidating: true
+  ↓
+Run all validation rules (sequential)
+  ↓
+Collect errors
+  ↓
+Update validation result
+  ↓
+isValidating: false
+  ↓
+Call onValidationChange callback
+  ↓
+Return ValidationResult
+```
+
+## TypeScript
+
+Full TypeScript support with generic types:
+
+```tsx
+import { useQuestionValidation } from './hooks/useQuestionValidation';
+import type { ValidationRule, ValidationResult } from './types';
+
+// For string validation
+const stringValidation = useQuestionValidation<string>({
+  value: 'test',
+  rules: [
+    { type: 'required', message: 'Required' },
+    { type: 'minLength', value: 3, message: 'Too short' },
+  ],
+});
+
+// For number validation
+const numberValidation = useQuestionValidation<number>({
+  value: 42,
+  rules: [
+    {
+      type: 'custom',
+      message: 'Must be positive',
+      validate: (val: number) => val > 0,
+    },
+  ],
+});
+
+// For array validation
+const arrayValidation = useQuestionValidation<string[]>({
+  value: ['a', 'b', 'c'],
+  rules: [
+    {
+      type: 'custom',
+      message: 'Select at least 2 options',
+      validate: (val: string[]) => val.length >= 2,
+    },
+  ],
+});
+
+// Custom type validation
+interface CustomAnswer {
+  text: string;
+  confidence: number;
+}
+
+const customValidation = useQuestionValidation<CustomAnswer>({
+  value: { text: 'answer', confidence: 0.8 },
+  rules: [
+    {
+      type: 'custom',
+      message: 'Confidence must be at least 0.5',
+      validate: (val: CustomAnswer) => val.confidence >= 0.5,
+    },
+  ],
+});
+```
+
+## Best Practices
+
+1. **Provide Clear Error Messages**: Write user-friendly, actionable error messages.
+
+2. **Use Auto-validation Wisely**: Enable `validateOnChange` for fields that benefit from immediate feedback, but consider debouncing for expensive validations.
+
+3. **Handle Async Errors**: Wrap async validation functions in try-catch blocks.
+
+4. **Validate Before Submit**: Always call `validate()` before submitting forms, even with auto-validation enabled.
+
+5. **Clear Validation on Reset**: Call `clearValidation()` when resetting forms or clearing inputs.
+
+6. **Monitor Loading State**: Use `isValidating` to show loading indicators during async validation.
+
+7. **Group Related Rules**: Order rules from simple to complex to fail fast.
+
+8. **Use Custom Rules for Complex Logic**: Leverage the `custom` rule type for business logic validation.
+
+## Common Patterns
+
+### Validate on Blur
+
+```tsx
+const { validate } = useQuestionValidation(options);
+
+<input
+  value={value}
+  onChange={(e) => setValue(e.target.value)}
+  onBlur={() => validate()}
+/>
+```
+
+### Conditional Error Display
+
+```tsx
+const { validation } = useQuestionValidation(options);
+
+const showErrors = hasBlurred && !validation.isValid;
+
+{showErrors && validation.errors.map(error => (
+  <p key={error}>{error}</p>
+))}
+```
+
+### Disable Submit Until Valid
+
+```tsx
+const { validation } = useQuestionValidation(options);
+
+<button 
+  type="submit" 
+  disabled={!validation.isValid}
+>
+  Submit
+</button>
+```
+
+## Related Hooks
+
+- **useQuestionState**: Manage question state and answers
+- **useQuestionTimer**: Add time limits to questions
+- **useQuestion**: Access question context
+
+## Notes
+
+- Validation runs sequentially through all rules
+- Empty rules array results in `isValid: true`
+- The `warnings` array is reserved for future use (currently always empty)
+- `validateOnChange` uses `useEffect` and may cause re-renders
+- Async validation functions should return `boolean` or `Promise<boolean>`
+- Pattern validation only works with string values
+- Length validation only works with string values
+- Custom validation receives the raw value and can handle any type

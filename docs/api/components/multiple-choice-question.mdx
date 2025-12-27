@@ -1,0 +1,758 @@
+---
+id: multiple-choice
+title: MultipleChoice
+sidebar_label: MultipleChoice
+---
+
+# MultipleChoice
+
+The `MultipleChoice` component renders interactive multiple-choice questions with support for single or multi-select modes, option shuffling, media attachments, and rich feedback.
+
+## Overview
+
+`MultipleChoice` is a specialized question component built on top of `BaseQuestion`. It provides:
+
+- **Single or Multi-Select**: Radio buttons or checkboxes
+- **Option Shuffling**: Randomize option order with consistent seeding
+- **Rich Content**: Support for markdown, LaTeX, or custom formatting
+- **Media Support**: Images in both questions and options
+- **Feedback System**: Per-option and overall feedback
+- **Hints**: Collapsible hint sections
+- **Validation**: Min/max selection constraints
+
+## Import
+```tsx
+import { MultipleChoice } from '@scinforma/picolms';
+```
+
+## Basic Usage
+
+### Single Selection
+```tsx
+<MultipleChoice
+  config={{
+    id: 'q1',
+    type: 'multiple-choice',
+    question: 'What is the capital of France?',
+    points: 10,
+    options: [
+      { id: 'a', text: 'London' },
+      { id: 'b', text: 'Paris', isCorrect: true },
+      { id: 'c', text: 'Berlin' },
+      { id: 'd', text: 'Madrid' },
+    ],
+  }}
+  onAnswerChange={(answer) => console.log(answer)}
+/>
+```
+
+### Multiple Selection
+```tsx
+<MultipleChoice
+  config={{
+    id: 'q2',
+    type: 'multiple-choice',
+    question: 'Select all programming languages:',
+    points: 15,
+    allowMultiple: true,
+    maxSelections: 3,
+    options: [
+      { id: 'a', text: 'Python', isCorrect: true },
+      { id: 'b', text: 'JavaScript', isCorrect: true },
+      { id: 'c', text: 'HTML' },
+      { id: 'd', text: 'Java', isCorrect: true },
+    ],
+  }}
+  showFeedback
+/>
+```
+
+## Props
+
+### Required Props
+
+#### `config`
+- **Type**: `MultipleChoiceConfig`
+- **Description**: Configuration object specific to multiple-choice questions. Extends `QuestionConfig` with multiple-choice-specific properties.
+
+### Optional Props
+
+All props from [`BaseQuestion`](./base-question.mdx) are supported, plus:
+
+#### `renderContent`
+- **Type**: `ContentRenderer`
+- **Description**: Custom function to render question text, options, feedback, and hints. Useful for markdown, LaTeX, or custom formatting.
+```tsx
+import ReactMarkdown from 'react-markdown';
+
+renderContent={(content, context) => {
+  if (context?.type === 'option') {
+    return <ReactMarkdown>{content}</ReactMarkdown>;
+  }
+  return <span>{content}</span>;
+}}
+```
+
+## MultipleChoiceConfig
+
+Extends `QuestionConfig` with these additional properties:
+
+### Core Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | `'multiple-choice'` | Yes | Must be `'multiple-choice'` |
+| `options` | `Option[]` | Yes | Array of answer options |
+| `allowMultiple` | `boolean` | No | Enable multi-select mode (checkboxes) |
+| `shuffleOptions` | `boolean` | No | Randomize option order (consistent per question) |
+| `maxSelections` | `number` | No | Maximum selections in multi-select mode |
+| `minSelections` | `number` | No | Minimum selections required |
+
+### Basic Example
+```tsx
+config={{
+  id: 'q1',
+  type: 'multiple-choice',
+  question: 'What is 2 + 2?',
+  points: 5,
+  options: [
+    { id: 'a', text: '3' },
+    { id: 'b', text: '4', isCorrect: true },
+    { id: 'c', text: '5' },
+  ],
+}}
+```
+
+### With Instructions
+```tsx
+config={{
+  id: 'q2',
+  type: 'multiple-choice',
+  title: 'Question 1',
+  question: 'Which planets are gas giants?',
+  instructions: 'Select all that apply. You may choose multiple answers.',
+  points: 10,
+  allowMultiple: true,
+  options: [
+    { id: 'a', text: 'Jupiter', isCorrect: true },
+    { id: 'b', text: 'Earth' },
+    { id: 'c', text: 'Saturn', isCorrect: true },
+    { id: 'd', text: 'Mars' },
+  ],
+}}
+```
+
+## Option Configuration
+
+Each option in the `options` array supports:
+
+### Option Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the option |
+| `text` | `string` | Yes | The option text content |
+| `isCorrect` | `boolean` | No | Whether this is a correct answer |
+| `feedback` | `string` | No | Feedback shown when option is selected |
+| `media` | `MediaItem` | No | Image or media for the option |
+
+### Basic Options
+```tsx
+options: [
+  { id: 'a', text: 'Apple' },
+  { id: 'b', text: 'Banana', isCorrect: true },
+  { id: 'c', text: 'Cherry' },
+]
+```
+
+### Options with Feedback
+```tsx
+options: [
+  {
+    id: 'a',
+    text: 'The sun',
+    feedback: 'The sun is a star, not a planet.',
+  },
+  {
+    id: 'b',
+    text: 'Earth',
+    isCorrect: true,
+    feedback: 'Correct! Earth is the third planet from the sun.',
+  },
+  {
+    id: 'c',
+    text: 'The moon',
+    feedback: 'The moon is a natural satellite, not a planet.',
+  },
+]
+```
+
+### Options with Images
+```tsx
+options: [
+  {
+    id: 'a',
+    text: 'Dog',
+    media: {
+      type: 'image',
+      url: '/images/dog.jpg',
+      alt: 'A golden retriever',
+    },
+  },
+  {
+    id: 'b',
+    text: 'Cat',
+    isCorrect: true,
+    media: {
+      type: 'image',
+      url: '/images/cat.jpg',
+      alt: 'A tabby cat',
+    },
+  },
+]
+```
+
+## MediaItem Configuration
+
+Images and media can be attached to questions and options:
+```tsx
+interface MediaItem {
+  id: string;
+  type: 'image' | 'video' | 'audio';
+  url: string;
+  alt?: string;      // Alt text for images
+  caption?: string;  // Caption displayed below media
+}
+```
+
+### Question with Media
+```tsx
+config={{
+  id: 'q3',
+  type: 'multiple-choice',
+  question: 'What animal is shown in the image?',
+  media: [
+    {
+      id: 'm1',
+      type: 'image',
+      url: '/images/elephant.jpg',
+      alt: 'An elephant in the wild',
+      caption: 'Figure 1: An African elephant',
+    },
+  ],
+  options: [
+    { id: 'a', text: 'Elephant', isCorrect: true },
+    { id: 'b', text: 'Rhinoceros' },
+    { id: 'c', text: 'Hippopotamus' },
+  ],
+}}
+```
+
+## Features
+
+### Option Shuffling
+
+Randomize option order while maintaining consistency per question:
+```tsx
+<MultipleChoice
+  config={{
+    id: 'q4',
+    type: 'multiple-choice',
+    question: 'What is the largest ocean?',
+    shuffleOptions: true, // Options will be shuffled
+    options: [
+      { id: 'a', text: 'Atlantic Ocean' },
+      { id: 'b', text: 'Pacific Ocean', isCorrect: true },
+      { id: 'c', text: 'Indian Ocean' },
+      { id: 'd', text: 'Arctic Ocean' },
+    ],
+  }}
+/>
+```
+
+**How it works:**
+- Uses Fisher-Yates shuffle algorithm
+- Seeded with question ID for consistency
+- Same shuffle order for the same question across sessions
+- Prevents answer pattern memorization
+
+### Multi-Select with Constraints
+```tsx
+<MultipleChoice
+  config={{
+    id: 'q5',
+    type: 'multiple-choice',
+    question: 'Select exactly 2 primary colors:',
+    allowMultiple: true,
+    minSelections: 2,
+    maxSelections: 2,
+    options: [
+      { id: 'a', text: 'Red', isCorrect: true },
+      { id: 'b', text: 'Blue', isCorrect: true },
+      { id: 'c', text: 'Yellow', isCorrect: true },
+      { id: 'd', text: 'Green' },
+      { id: 'e', text: 'Purple' },
+    ],
+    validation: {
+      rules: [
+        {
+          type: 'custom',
+          validate: (value) => {
+            return Array.isArray(value) && value.length === 2;
+          },
+          message: 'Please select exactly 2 options',
+        },
+      ],
+    },
+  }}
+/>
+```
+
+### Hints
+
+Provide collapsible hints to help students:
+```tsx
+<MultipleChoice
+  config={{
+    id: 'q6',
+    type: 'multiple-choice',
+    question: 'What is the chemical symbol for gold?',
+    options: [
+      { id: 'a', text: 'Go' },
+      { id: 'b', text: 'Au', isCorrect: true },
+      { id: 'c', text: 'Gd' },
+      { id: 'd', text: 'Ag' },
+    ],
+    feedback: {
+      hints: [
+        'Think about the Latin name for gold.',
+        'The Latin word is "aurum".',
+      ],
+    },
+  }}
+/>
+```
+
+### Complete Feedback System
+```tsx
+<MultipleChoice
+  config={{
+    id: 'q7',
+    type: 'multiple-choice',
+    question: 'Which is the largest planet?',
+    points: 10,
+    options: [
+      {
+        id: 'a',
+        text: 'Earth',
+        feedback: 'Earth is actually quite small compared to gas giants.',
+      },
+      {
+        id: 'b',
+        text: 'Jupiter',
+        isCorrect: true,
+        feedback: 'Correct! Jupiter is the largest planet in our solar system.',
+      },
+      {
+        id: 'c',
+        text: 'Saturn',
+        feedback: 'Saturn is large, but not the largest.',
+      },
+    ],
+    feedback: {
+      correct: {
+        message: 'Excellent! You got it right.',
+        type: 'success',
+      },
+      incorrect: {
+        message: 'Not quite. Try again!',
+        type: 'error',
+      },
+      hints: ['Think about which planet is known for its Great Red Spot.'],
+    },
+  }}
+  showFeedback
+/>
+```
+
+## Answer Format
+
+### Single Selection
+
+When `allowMultiple` is `false` (default), the answer value is a single option ID:
+```tsx
+// Answer object
+{
+  questionId: 'q1',
+  value: 'b',  // Single option ID
+  isAnswered: true,
+  attemptNumber: 1,
+  timeSpent: 15,
+  timestamp: '2025-01-01T12:00:00Z',
+}
+```
+
+### Multiple Selection
+
+When `allowMultiple` is `true`, the answer value is an array of option IDs:
+```tsx
+// Answer object
+{
+  questionId: 'q2',
+  value: ['a', 'c', 'd'],  // Array of option IDs
+  isAnswered: true,
+  attemptNumber: 1,
+  timeSpent: 30,
+  timestamp: '2025-01-01T12:00:00Z',
+}
+```
+
+## Custom Content Rendering
+
+The `renderContent` prop receives content and context information:
+```tsx
+interface ContentContext {
+  type: 'question' | 'option' | 'feedback' | 'hint' | 'instruction';
+  questionId: string;
+  optionId?: string;  // Present for 'option' and 'feedback' types
+}
+
+type ContentRenderer = (
+  content: string,
+  context?: ContentContext
+) => ReactNode;
+```
+
+### Markdown Rendering
+```tsx
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+
+<MultipleChoice
+  config={{
+    id: 'q8',
+    type: 'multiple-choice',
+    question: 'What is the solution to $x^2 + 5x + 6 = 0$?',
+    options: [
+      { id: 'a', text: '$x = -2$ or $x = -3$', isCorrect: true },
+      { id: 'b', text: '$x = 2$ or $x = 3$' },
+      { id: 'c', text: '$x = -1$ or $x = -6$' },
+    ],
+  }}
+  renderContent={(content, context) => (
+    <ReactMarkdown
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+    >
+      {content}
+    </ReactMarkdown>
+  )}
+/>
+```
+
+### Conditional Rendering
+```tsx
+<MultipleChoice
+  config={config}
+  renderContent={(content, context) => {
+    // Plain text for options, markdown for questions
+    if (context?.type === 'option') {
+      return <span>{content}</span>;
+    }
+    return <ReactMarkdown>{content}</ReactMarkdown>;
+  }}
+/>
+```
+
+## Styling
+
+### CSS Classes
+
+The component generates the following CSS classes:
+```css
+/* Main container */
+.picolms-multiple-choice-question { }
+
+/* Question header */
+.picolms-question-header { }
+.picolms-question-title { }
+.picolms-question-text { }
+.picolms-question-instructions { }
+
+/* Media */
+.picolms-question-media { }
+.picolms-media-item { }
+.picolms-media-caption { }
+
+/* Options container */
+.picolms-mc-options { }
+
+/* Individual option */
+.picolms-mc-option { }
+.picolms-mc-option.mc-option-selected { }
+.picolms-mc-option.mc-option-locked { }
+.picolms-mc-option-label { }
+.picolms-mc-option-text { }
+.picolms-mc-option-media { }
+.picolms-mc-option-feedback { }
+
+/* Validation and feedback */
+.picolms-question-errors { }
+.picolms-error-message { }
+.picolms-question-feedback { }
+.picolms-question-feedback.feedback-success { }
+.picolms-question-feedback.feedback-error { }
+
+/* Hints */
+.picolms-question-hints { }
+.picolms-hint-text { }
+
+/* Metadata */
+.picolms-question-meta { }
+.picolms-question-points { }
+.picolms-question-difficulty { }
+```
+
+### Custom Styling Example
+```css
+.picolms-mc-option {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.picolms-mc-option.mc-option-selected {
+  border-color: #2196f3;
+  background-color: #e3f2fd;
+}
+
+.picolms-mc-option:hover:not(.mc-option-locked) {
+  border-color: #90caf9;
+  cursor: pointer;
+}
+
+.picolms-question-feedback.feedback-success {
+  background-color: #c8e6c9;
+  border-left: 4px solid #4caf50;
+  padding: 12px;
+}
+
+.picolms-question-feedback.feedback-error {
+  background-color: #ffcdd2;
+  border-left: 4px solid #f44336;
+  padding: 12px;
+}
+```
+
+## Complete Examples
+
+### Quiz Question
+```tsx
+<MultipleChoice
+  config={{
+    id: 'quiz-q1',
+    type: 'multiple-choice',
+    title: 'Question 1 of 10',
+    question: 'What is the capital of Japan?',
+    instructions: 'Select one answer.',
+    points: 10,
+    difficulty: 'easy',
+    maxAttempts: 2,
+    options: [
+      { id: 'a', text: 'Beijing' },
+      { id: 'b', text: 'Seoul' },
+      { id: 'c', text: 'Tokyo', isCorrect: true },
+      { id: 'd', text: 'Bangkok' },
+    ],
+    feedback: {
+      correct: {
+        message: 'Correct! Tokyo is the capital of Japan.',
+        type: 'success',
+      },
+      incorrect: {
+        message: 'Not quite right. Try again!',
+        type: 'error',
+      },
+    },
+  }}
+  showFeedback
+  showCheckButton
+  onAnswerChange={(answer) => saveProgress(answer)}
+  onSubmit={(answer) => submitAnswer(answer)}
+/>
+```
+
+### Survey Question
+```tsx
+<MultipleChoice
+  config={{
+    id: 'survey-q1',
+    type: 'multiple-choice',
+    question: 'Which programming languages do you use regularly?',
+    instructions: 'Select all that apply (up to 5).',
+    points: 0, // No points for surveys
+    allowMultiple: true,
+    maxSelections: 5,
+    shuffleOptions: true,
+    options: [
+      { id: 'js', text: 'JavaScript' },
+      { id: 'py', text: 'Python' },
+      { id: 'java', text: 'Java' },
+      { id: 'cpp', text: 'C++' },
+      { id: 'cs', text: 'C#' },
+      { id: 'go', text: 'Go' },
+      { id: 'rust', text: 'Rust' },
+      { id: 'php', text: 'PHP' },
+    ],
+  }}
+  onAnswerChange={(answer) => console.log('Survey response:', answer)}
+/>
+```
+
+### Image-Based Question
+```tsx
+<MultipleChoice
+  config={{
+    id: 'img-q1',
+    type: 'multiple-choice',
+    question: 'Which architectural style is shown in the image?',
+    media: [
+      {
+        id: 'm1',
+        type: 'image',
+        url: '/images/gothic-cathedral.jpg',
+        alt: 'A Gothic cathedral with pointed arches',
+        caption: 'Medieval European architecture',
+      },
+    ],
+    points: 15,
+    options: [
+      {
+        id: 'a',
+        text: 'Gothic',
+        isCorrect: true,
+        feedback: 'Correct! The pointed arches are characteristic of Gothic architecture.',
+      },
+      {
+        id: 'b',
+        text: 'Romanesque',
+        feedback: 'Romanesque architecture features rounded arches, not pointed ones.',
+      },
+      {
+        id: 'c',
+        text: 'Baroque',
+        feedback: 'Baroque architecture is more ornate and dramatic.',
+      },
+      {
+        id: 'd',
+        text: 'Neoclassical',
+        feedback: 'Neoclassical draws from Greek and Roman styles.',
+      },
+    ],
+    feedback: {
+      hints: [
+        'Look at the shape of the arches.',
+        'This style was popular in medieval Europe.',
+      ],
+    },
+  }}
+  showFeedback
+  renderContent={(content) => <ReactMarkdown>{content}</ReactMarkdown>}
+/>
+```
+
+## Accessibility
+
+The component includes comprehensive accessibility features:
+
+- **Semantic HTML**: Uses proper form elements (`radio`, `checkbox`)
+- **ARIA Labels**: Automatic labeling for screen readers
+- **Keyboard Navigation**: Full keyboard support
+- **Focus Management**: Proper focus indicators
+- **Error Announcements**: Validation errors announced via `role="alert"`
+- **Status Updates**: Feedback announced via `role="status"`
+
+### Custom Accessibility
+```tsx
+<MultipleChoice
+  config={{
+    id: 'q9',
+    type: 'multiple-choice',
+    question: 'Select the correct answer',
+    options: [...],
+    accessibility: {
+      ariaLabel: 'Geography question about European capitals',
+      ariaDescribedBy: 'question-hint',
+    },
+  }}
+  aria-label="Question 1 of 5"
+/>
+```
+
+## TypeScript
+
+Full TypeScript support with proper types:
+```tsx
+import type { MultipleChoiceConfig, MultipleChoiceAnswer } from '@scinforma/picolms';
+
+const config: MultipleChoiceConfig = {
+  id: 'q1',
+  type: 'multiple-choice',
+  question: 'What is TypeScript?',
+  options: [
+    { id: 'a', text: 'A programming language', isCorrect: true },
+    { id: 'b', text: 'A database' },
+  ],
+};
+
+// Answer type is automatically inferred
+const handleAnswer = (answer: QuestionAnswer<MultipleChoiceAnswer>) => {
+  // answer.value is string (single) or string[] (multiple)
+  console.log(answer.value);
+};
+```
+
+## Best Practices
+
+1. **Provide Clear Instructions**: Especially for multi-select questions, tell users how many to select.
+
+2. **Use Meaningful Option IDs**: Use descriptive IDs like `'correct-answer'` rather than `'a'` for better debugging.
+
+3. **Balance Option Count**: 3-5 options is optimal; too many can overwhelm users.
+
+4. **Shuffle for Assessments**: Use `shuffleOptions: true` for tests to prevent pattern memorization.
+
+5. **Give Specific Feedback**: Provide per-option feedback to guide learning, not just correct/incorrect.
+
+6. **Consider Images Carefully**: Ensure images are accessible with proper alt text.
+
+7. **Set Appropriate Points**: Weight questions based on difficulty and importance.
+
+8. **Test Validation**: Ensure min/max selection rules work as expected before deployment.
+
+## Related Components
+
+- **BaseQuestion**: Foundation component with core functionality
+- **ShortAnswerQuestion**: Text-based answer component
+- **QuestionFeedback**: Standalone feedback display component
+
+## Related Hooks
+
+- **useQuestion**: Access question context
+- **useQuestionContext**: Internal hook for MultipleChoice content
+
+## Migration from BaseQuestion
+
+If you're building a custom multiple-choice component, use this instead:
+```tsx
+// Before (custom implementation)
+<BaseQuestion config={customConfig}>
+  <CustomMultipleChoiceContent />
+</BaseQuestion>
+
+// After (use built-in component)
+<MultipleChoice config={multipleChoiceConfig} />
+```

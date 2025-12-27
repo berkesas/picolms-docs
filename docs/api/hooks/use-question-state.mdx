@@ -1,0 +1,697 @@
+---
+id: use-question-state
+title: useQuestionState
+sidebar_label: useQuestionState
+---
+
+# useQuestionState
+
+A React hook for managing question state, including answers, submission status, attempt tracking, and time tracking. This hook provides the core state management functionality used by `BaseQuestion` and can be used in custom question implementations.
+
+## Overview
+
+`useQuestionState` handles:
+
+- **Answer Management**: Store and update question answers
+- **Status Tracking**: Track submission status (not-started, in-progress, submitted, etc.)
+- **Attempt Counting**: Track number of answer attempts
+- **Time Tracking**: Automatically track time spent on the question
+- **Auto-save**: Optional automatic saving with configurable delay
+- **Change Callbacks**: Notify parent components of state changes
+
+## Import
+```tsx
+import { useQuestionState } from '@scinforma/picolms';
+```
+
+## Basic Usage
+```tsx
+import { useQuestionState } from '@scinforma/picolms';
+
+function MyCustomQuestion({ config }) {
+  const {
+    answer,
+    setAnswer,
+    clearAnswer,
+    status,
+    timeSpent,
+    isAnswered,
+  } = useQuestionState({
+    config,
+    initialAnswer: '',
+  });
+
+  return (
+    <div>
+      <input
+        value={answer.value || ''}
+        onChange={(e) => setAnswer(e.target.value)}
+        disabled={status === 'submitted'}
+      />
+      <p>Time spent: {timeSpent}s</p>
+      <button onClick={clearAnswer}>Clear</button>
+    </div>
+  );
+}
+```
+
+## Parameters
+
+### `options`
+
+**Type**: `UseQuestionStateOptions<T>`
+
+Configuration object for the hook.
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `config` | `QuestionConfig` | Yes | - | Question configuration object |
+| `initialAnswer` | `T` | No | `undefined` | Initial answer value |
+| `onAnswerChange` | `(answer: QuestionAnswer<T>) => void` | No | - | Callback when answer changes |
+| `autoSave` | `boolean` | No | `false` | Enable automatic saving |
+| `autoSaveDelay` | `number` | No | `1000` | Auto-save delay in milliseconds |
+
+### Examples
+
+#### Basic Configuration
+```tsx
+const state = useQuestionState({
+  config: {
+    id: 'q1',
+    type: 'short-answer',
+    question: 'What is your name?',
+  },
+});
+```
+
+#### With Initial Answer
+```tsx
+const state = useQuestionState({
+  config: questionConfig,
+  initialAnswer: 'Previous answer',
+});
+```
+
+#### With Change Callback
+```tsx
+const state = useQuestionState({
+  config: questionConfig,
+  onAnswerChange: (answer) => {
+    console.log('Answer changed:', answer.value);
+    console.log('Time spent:', answer.timeSpent);
+    saveToBackend(answer);
+  },
+});
+```
+
+#### With Auto-save
+```tsx
+const state = useQuestionState({
+  config: questionConfig,
+  autoSave: true,
+  autoSaveDelay: 2000, // Save 2 seconds after last change
+  onAnswerChange: (answer) => {
+    // This will be called immediately
+    updateLocalState(answer);
+  },
+});
+```
+
+## Return Value
+
+**Type**: `UseQuestionStateReturn<T>`
+
+The hook returns an object with the following properties and methods:
+
+### Properties
+
+#### `answer`
+- **Type**: `QuestionAnswer<T>`
+- **Description**: Complete answer object with metadata
+```tsx
+const { answer } = useQuestionState(options);
+
+console.log(answer);
+// {
+//   questionId: 'q1',
+//   value: 'My answer',
+//   isAnswered: true,
+//   attemptNumber: 1,
+//   timeSpent: 45,
+//   timestamp: '2025-01-01T12:00:00Z'
+// }
+```
+
+#### `status`
+- **Type**: `SubmissionStatus`
+- **Values**: `'not-started' | 'in-progress' | 'submitted' | 'graded'`
+- **Description**: Current submission status of the question
+```tsx
+const { status } = useQuestionState(options);
+
+if (status === 'submitted') {
+  // Show submitted state
+}
+```
+
+#### `attemptNumber`
+- **Type**: `number`
+- **Description**: Current attempt number (starts at 1)
+```tsx
+const { attemptNumber } = useQuestionState(options);
+
+console.log(`Attempt ${attemptNumber} of 3`);
+```
+
+#### `timeSpent`
+- **Type**: `number`
+- **Description**: Time spent on question in seconds (auto-updates every second)
+```tsx
+const { timeSpent } = useQuestionState(options);
+
+const minutes = Math.floor(timeSpent / 60);
+const seconds = timeSpent % 60;
+console.log(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+```
+
+#### `isAnswered`
+- **Type**: `boolean`
+- **Description**: Whether the question has been answered (value is not null/undefined/empty)
+```tsx
+const { isAnswered } = useQuestionState(options);
+
+if (!isAnswered) {
+  console.log('Please answer the question');
+}
+```
+
+### Methods
+
+#### `setAnswer(value)`
+- **Type**: `(value: T) => void`
+- **Description**: Update the answer value. Automatically updates timestamp, triggers callbacks, and sets status to 'in-progress' if not started.
+```tsx
+const { setAnswer } = useQuestionState(options);
+
+// Set answer value
+setAnswer('My new answer');
+
+// For multiple choice
+setAnswer('option-b');
+
+// For multi-select
+setAnswer(['option-a', 'option-c']);
+```
+
+#### `clearAnswer()`
+- **Type**: `() => void`
+- **Description**: Clear the current answer (sets value to undefined)
+```tsx
+const { clearAnswer } = useQuestionState(options);
+
+// Reset the question
+clearAnswer();
+```
+
+#### `setStatus(status)`
+- **Type**: `(status: SubmissionStatus) => void`
+- **Description**: Manually update the submission status
+```tsx
+const { setStatus } = useQuestionState(options);
+
+// Mark as submitted
+setStatus('submitted');
+
+// Mark as graded
+setStatus('graded');
+```
+
+#### `incrementAttempt()`
+- **Type**: `() => void`
+- **Description**: Increment the attempt counter (used when validation fails)
+```tsx
+const { incrementAttempt, attemptNumber } = useQuestionState(options);
+
+const handleCheck = async () => {
+  const isValid = await validateAnswer();
+  if (!isValid) {
+    incrementAttempt();
+    console.log(`Try again. Attempt ${attemptNumber + 1}`);
+  }
+};
+```
+
+## QuestionAnswer Object
+
+The `answer` property and callbacks receive this structure:
+```tsx
+interface QuestionAnswer<T> {
+  questionId: string;      // ID of the question
+  value: T;                // The answer value (type depends on question type)
+  isAnswered: boolean;     // Whether answered (not null/undefined/empty)
+  attemptNumber: number;   // Current attempt number
+  timeSpent: number;       // Time spent in seconds
+  timestamp: string;       // ISO timestamp of last update
+}
+```
+
+## Submission Status Values
+```tsx
+type SubmissionStatus = 
+  | 'not-started'  // Question hasn't been interacted with
+  | 'in-progress'  // User is answering
+  | 'submitted'    // Answer has been submitted
+  | 'graded';      // Answer has been graded
+```
+
+## Time Tracking
+
+Time tracking starts when the hook is initialized and updates every second while the status is `'not-started'` or `'in-progress'`.
+
+### Display Time
+```tsx
+const { timeSpent } = useQuestionState(options);
+
+// Format as MM:SS
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+return <div>Time: {formatTime(timeSpent)}</div>;
+```
+
+### Stop Time Tracking
+```tsx
+const { setStatus } = useQuestionState(options);
+
+// Time tracking stops when status is 'submitted' or 'graded'
+const handleSubmit = () => {
+  setStatus('submitted');
+  // Time tracking automatically stops
+};
+```
+
+## Auto-save Feature
+
+When `autoSave` is enabled, the hook automatically triggers a save action after the specified delay following an answer change.
+
+### Basic Auto-save
+```tsx
+const state = useQuestionState({
+  config: questionConfig,
+  autoSave: true,
+  autoSaveDelay: 1000, // Wait 1 second after typing stops
+  onAnswerChange: (answer) => {
+    // Called immediately on change
+    updateUI(answer);
+  },
+});
+
+// Auto-save logs to console by default
+// Override by implementing your own save logic
+```
+
+### Custom Auto-save Logic
+
+Since the hook logs to console by default, you'll typically want to implement your own save logic:
+```tsx
+import { useState, useEffect } from 'react';
+
+function useCustomAutoSave(answer, delay) {
+  useEffect(() => {
+    if (!answer.isAnswered) return;
+
+    const timeout = setTimeout(() => {
+      // Your custom save logic
+      fetch('/api/save', {
+        method: 'POST',
+        body: JSON.stringify(answer),
+      });
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [answer, delay]);
+}
+
+function MyQuestion({ config }) {
+  const state = useQuestionState({
+    config,
+    autoSave: false, // Disable built-in auto-save
+  });
+
+  // Use custom auto-save
+  useCustomAutoSave(state.answer, 2000);
+
+  return <div>...</div>;
+}
+```
+
+## Examples
+
+### Short Answer Question
+```tsx
+function ShortAnswerQuestion({ config }) {
+  const {
+    answer,
+    setAnswer,
+    clearAnswer,
+    status,
+    timeSpent,
+    isAnswered,
+  } = useQuestionState({
+    config,
+    initialAnswer: '',
+    onAnswerChange: (answer) => {
+      console.log('Answer updated:', answer);
+    },
+  });
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <textarea
+        value={answer.value || ''}
+        onChange={(e) => setAnswer(e.target.value)}
+        disabled={status === 'submitted'}
+        placeholder="Type your answer here..."
+      />
+      <div>
+        <span>Time spent: {timeSpent}s</span>
+        <span>Status: {status}</span>
+      </div>
+      <button onClick={clearAnswer} disabled={!isAnswered}>
+        Clear
+      </button>
+    </div>
+  );
+}
+```
+
+### Multiple Choice with Attempt Tracking
+```tsx
+function MultipleChoiceQuestion({ config, maxAttempts = 3 }) {
+  const {
+    answer,
+    setAnswer,
+    status,
+    setStatus,
+    attemptNumber,
+    incrementAttempt,
+  } = useQuestionState({
+    config,
+  });
+
+  const handleCheck = () => {
+    const isCorrect = answer.value === config.correctAnswer;
+    
+    if (!isCorrect) {
+      incrementAttempt();
+      
+      if (attemptNumber >= maxAttempts) {
+        setStatus('submitted');
+        alert('Maximum attempts reached');
+      } else {
+        alert(`Incorrect. Attempt ${attemptNumber + 1} of ${maxAttempts}`);
+      }
+    } else {
+      setStatus('submitted');
+      alert('Correct!');
+    }
+  };
+
+  const isLocked = status === 'submitted' || attemptNumber > maxAttempts;
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      {config.options.map((option) => (
+        <label key={option.id}>
+          <input
+            type="radio"
+            name={config.id}
+            value={option.id}
+            checked={answer.value === option.id}
+            onChange={(e) => setAnswer(e.target.value)}
+            disabled={isLocked}
+          />
+          {option.text}
+        </label>
+      ))}
+      <div>
+        <button onClick={handleCheck} disabled={isLocked || !answer.isAnswered}>
+          Check Answer
+        </button>
+        <span>Attempts: {attemptNumber} / {maxAttempts}</span>
+      </div>
+    </div>
+  );
+}
+```
+
+### Controlled Component
+```tsx
+function ControlledQuestion({ config, externalAnswer, onExternalChange }) {
+  const {
+    setAnswer,
+    status,
+    timeSpent,
+    isAnswered,
+  } = useQuestionState({
+    config,
+    initialAnswer: externalAnswer,
+    onAnswerChange: (answer) => {
+      // Sync with parent component
+      onExternalChange(answer);
+    },
+  });
+
+  // Use external answer if provided
+  const currentAnswer = externalAnswer || '';
+
+  return (
+    <div>
+      <input
+        value={currentAnswer}
+        onChange={(e) => setAnswer(e.target.value)}
+      />
+      <div>Time: {timeSpent}s | Status: {status}</div>
+    </div>
+  );
+}
+```
+
+### Quiz with Auto-save
+```tsx
+function QuizQuestion({ config }) {
+  const {
+    answer,
+    setAnswer,
+    status,
+    setStatus,
+    timeSpent,
+    isAnswered,
+  } = useQuestionState({
+    config,
+    autoSave: true,
+    autoSaveDelay: 2000,
+    onAnswerChange: (answer) => {
+      // Immediate feedback
+      updateProgressBar(answer);
+    },
+  });
+
+  const handleSubmit = async () => {
+    setStatus('submitted');
+    
+    const result = await submitToServer({
+      ...answer,
+      finalTimeSpent: timeSpent,
+    });
+    
+    if (result.graded) {
+      setStatus('graded');
+    }
+  };
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <input
+        value={answer.value || ''}
+        onChange={(e) => setAnswer(e.target.value)}
+        disabled={status !== 'in-progress' && status !== 'not-started'}
+      />
+      <div>
+        <p>Time: {timeSpent}s</p>
+        <p>Auto-saved {isAnswered ? '✓' : '...'}</p>
+      </div>
+      <button
+        onClick={handleSubmit}
+        disabled={!isAnswered || status === 'submitted'}
+      >
+        Submit
+      </button>
+    </div>
+  );
+}
+```
+
+### Progress Tracking
+```tsx
+function QuestionWithProgress({ config }) {
+  const {
+    answer,
+    setAnswer,
+    timeSpent,
+    isAnswered,
+    attemptNumber,
+  } = useQuestionState({
+    config,
+    onAnswerChange: (answer) => {
+      // Track analytics
+      trackEvent('question_answered', {
+        questionId: answer.questionId,
+        attemptNumber: answer.attemptNumber,
+        timeSpent: answer.timeSpent,
+      });
+    },
+  });
+
+  const progress = {
+    answered: isAnswered,
+    attempts: attemptNumber,
+    time: timeSpent,
+    efficiency: isAnswered ? timeSpent / attemptNumber : 0,
+  };
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <input
+        value={answer.value || ''}
+        onChange={(e) => setAnswer(e.target.value)}
+      />
+      <div className="progress-stats">
+        <div>Status: {isAnswered ? 'Answered' : 'Not answered'}</div>
+        <div>Attempts: {progress.attempts}</div>
+        <div>Time: {progress.time}s</div>
+        <div>Avg time/attempt: {progress.efficiency.toFixed(1)}s</div>
+      </div>
+    </div>
+  );
+}
+```
+
+## TypeScript
+
+Full TypeScript support with generic types:
+```tsx
+import { useQuestionState } from '@scinforma/picolms';
+import type { QuestionAnswer } from '@scinforma/picolms';
+
+// For string answers
+const stringState = useQuestionState<string>({
+  config: shortAnswerConfig,
+  initialAnswer: '',
+});
+
+// For multiple choice (single selection)
+const mcState = useQuestionState<string>({
+  config: multipleChoiceConfig,
+  initialAnswer: 'option-a',
+});
+
+// For multiple choice (multi-select)
+const multiSelectState = useQuestionState<string[]>({
+  config: multiSelectConfig,
+  initialAnswer: [],
+});
+
+// Custom answer type
+interface CustomAnswer {
+  text: string;
+  confidence: number;
+}
+
+const customState = useQuestionState<CustomAnswer>({
+  config: customConfig,
+  initialAnswer: { text: '', confidence: 0 },
+  onAnswerChange: (answer: QuestionAnswer<CustomAnswer>) => {
+    console.log(answer.value.text);
+    console.log(answer.value.confidence);
+  },
+});
+```
+
+## Best Practices
+
+1. **Initialize Early**: Call `useQuestionState` at the component level, not conditionally.
+
+2. **Use Callbacks for Side Effects**: Use `onAnswerChange` for analytics, persistence, or parent updates.
+
+3. **Handle Status Changes**: Update UI based on status to show submitted/graded states.
+
+4. **Type Your Answers**: Use TypeScript generics for type safety with different answer types.
+
+5. **Clear on Reset**: Call `clearAnswer()` when resetting questions, not `setAnswer(undefined)`.
+
+6. **Monitor Time Spent**: Display `timeSpent` to users to encourage time awareness.
+
+7. **Implement Custom Auto-save**: For production, implement your own auto-save logic with proper error handling.
+
+8. **Track Attempts**: Use `attemptNumber` to limit retries and provide progressive hints.
+
+## Common Patterns
+
+### Reset Question
+```tsx
+const { clearAnswer, setStatus, attemptNumber } = useQuestionState(options);
+
+const resetQuestion = () => {
+  clearAnswer();
+  setStatus('not-started');
+  // Note: attemptNumber is not reset automatically
+};
+```
+
+### Check if Modified
+```tsx
+const { answer, isAnswered, timeSpent } = useQuestionState(options);
+
+const isModified = isAnswered && timeSpent > 0;
+```
+
+### Prevent Navigation with Unsaved Changes
+```tsx
+const { isAnswered, status } = useQuestionState(options);
+
+useEffect(() => {
+  const hasUnsavedChanges = isAnswered && status !== 'submitted';
+  
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (hasUnsavedChanges) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  };
+  
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+}, [isAnswered, status]);
+```
+
+## Related Hooks
+
+- **useQuestionValidation**: Validate question answers
+- **useQuestionTimer**: Add time limits to questions
+- **useQuestion**: Access question context (uses useQuestionState internally)
+
+## Notes
+
+- Time tracking updates every second while status is `'not-started'` or `'in-progress'`
+- Auto-save only triggers when `isAnswered` is `true`
+- The `onAnswerChange` callback fires before auto-save
+- Status changes can be used to stop time tracking
+- `isAnswered` checks if value is not null, undefined, or empty string

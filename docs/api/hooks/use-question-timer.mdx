@@ -1,0 +1,624 @@
+---
+id: use-question-timer
+title: useQuestionTimer
+sidebar_label: useQuestionTimer
+---
+
+# useQuestionTimer
+
+A React hook for managing countdown timers with precise control over timing, state management, and callbacks.
+
+## Overview
+
+`useQuestionTimer` handles:
+
+- **Countdown Management**: Track remaining and elapsed time
+- **Timer Controls**: Start, pause, resume, and reset functionality
+- **Progress Tracking**: Calculate percentage-based progress
+- **Time Callbacks**: Execute functions on timer completion and intervals
+- **Auto-start**: Optional automatic timer initialization
+
+## Import
+
+```tsx
+import { useQuestionTimer } from './hooks/useQuestionTimer';
+import type { UseQuestionTimerOptions, UseQuestionTimerReturn } from './hooks/useQuestionTimer';
+```
+
+## Basic Usage
+
+```tsx
+import { useQuestionTimer } from './hooks/useQuestionTimer';
+
+function QuizQuestion() {
+  const {
+    timeRemaining,
+    isRunning,
+    start,
+    pause,
+    reset,
+  } = useQuestionTimer({
+    timeLimit: 60,
+    onTimeUp: () => console.log('Time is up!'),
+  });
+
+  return (
+    <div>
+      <p>Time remaining: {timeRemaining}s</p>
+      <button onClick={start}>Start</button>
+      <button onClick={pause}>Pause</button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  );
+}
+```
+
+## Parameters
+
+### `options`
+
+**Type**: `UseQuestionTimerOptions`
+
+Configuration object for the hook.
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `timeLimit` | `number` | No | `0` | Total time limit in seconds |
+| `onTimeUp` | `() => void` | No | - | Callback executed when timer reaches zero |
+| `onTick` | `(timeRemaining: number) => void` | No | - | Callback executed every second with remaining time |
+| `autoStart` | `boolean` | No | `false` | Whether to start the timer automatically on mount |
+
+### Examples
+
+#### Basic Configuration
+
+```tsx
+const timer = useQuestionTimer({
+  timeLimit: 120,
+});
+```
+
+#### With Time Up Callback
+
+```tsx
+const timer = useQuestionTimer({
+  timeLimit: 60,
+  onTimeUp: () => {
+    alert('Time is up!');
+    submitAnswer();
+  },
+});
+```
+
+#### With Tick Callback
+
+```tsx
+const timer = useQuestionTimer({
+  timeLimit: 30,
+  onTick: (remaining) => {
+    console.log(`${remaining} seconds remaining`);
+    if (remaining === 10) {
+      showWarning('Only 10 seconds left!');
+    }
+  },
+});
+```
+
+#### With Auto-start
+
+```tsx
+const timer = useQuestionTimer({
+  timeLimit: 180,
+  autoStart: true,
+  onTimeUp: () => handleTimeExpired(),
+});
+```
+
+## Return Value
+
+**Type**: `UseQuestionTimerReturn`
+
+The hook returns an object with the following properties and methods:
+
+### Properties
+
+#### `timeRemaining`
+- **Type**: `number`
+- **Description**: The remaining time in seconds
+```tsx
+const { timeRemaining } = useQuestionTimer({ timeLimit: 60 });
+
+console.log(`${timeRemaining} seconds left`);
+```
+
+#### `timeElapsed`
+- **Type**: `number`
+- **Description**: The elapsed time in seconds since timer started
+```tsx
+const { timeElapsed } = useQuestionTimer({ timeLimit: 60 });
+
+console.log(`${timeElapsed} seconds have passed`);
+```
+
+#### `isRunning`
+- **Type**: `boolean`
+- **Description**: Whether the timer is currently running
+```tsx
+const { isRunning } = useQuestionTimer(options);
+
+if (isRunning) {
+  console.log('Timer is active');
+}
+```
+
+#### `isTimeUp`
+- **Type**: `boolean`
+- **Description**: Whether the timer has reached zero
+```tsx
+const { isTimeUp } = useQuestionTimer(options);
+
+if (isTimeUp) {
+  console.log('Time has expired');
+}
+```
+
+#### `progress`
+- **Type**: `number`
+- **Description**: Progress percentage from 0 to 100
+```tsx
+const { progress } = useQuestionTimer({ timeLimit: 60 });
+
+console.log(`${progress}% complete`);
+// Calculated as: ((timeLimit - timeRemaining) / timeLimit) * 100
+```
+
+### Methods
+
+#### `start()`
+- **Type**: `() => void`
+- **Description**: Starts the timer from the beginning
+```tsx
+const { start } = useQuestionTimer(options);
+
+// Start the countdown
+start();
+```
+
+#### `pause()`
+- **Type**: `() => void`
+- **Description**: Pauses the timer and maintains current time
+```tsx
+const { pause } = useQuestionTimer(options);
+
+// Temporarily stop the timer
+pause();
+```
+
+#### `resume()`
+- **Type**: `() => void`
+- **Description**: Resumes the timer from paused state
+```tsx
+const { resume } = useQuestionTimer(options);
+
+// Continue from where it was paused
+resume();
+```
+
+#### `reset()`
+- **Type**: `() => void`
+- **Description**: Resets the timer to initial state with full time remaining
+```tsx
+const { reset } = useQuestionTimer(options);
+
+// Reset to beginning
+reset();
+```
+
+## Examples
+
+### Countdown Timer with Progress Bar
+
+```tsx
+function CountdownQuestion({ config }) {
+  const timer = useQuestionTimer({
+    timeLimit: 120,
+    onTimeUp: () => {
+      alert('Time is up! Submitting your answer...');
+      submitAnswer();
+    },
+    autoStart: true,
+  });
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <div className="timer-display">
+        <span>{timer.timeRemaining}s remaining</span>
+        <progress value={timer.progress} max={100} />
+      </div>
+    </div>
+  );
+}
+```
+
+### Manual Timer Control
+
+```tsx
+function ManualTimerQuestion({ config }) {
+  const timer = useQuestionTimer({
+    timeLimit: 300,
+    autoStart: false,
+  });
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <div className="timer-controls">
+        <p>Elapsed: {timer.timeElapsed}s</p>
+        <p>Remaining: {timer.timeRemaining}s</p>
+        
+        {!timer.isRunning && !timer.isTimeUp && (
+          <button onClick={timer.start}>Start Timer</button>
+        )}
+        
+        {timer.isRunning && (
+          <button onClick={timer.pause}>Pause</button>
+        )}
+        
+        {!timer.isRunning && timer.timeElapsed > 0 && !timer.isTimeUp && (
+          <button onClick={timer.resume}>Resume</button>
+        )}
+        
+        <button onClick={timer.reset}>Reset</button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Timer with Visual Feedback
+
+```tsx
+function VisualTimerQuestion({ config }) {
+  const timer = useQuestionTimer({
+    timeLimit: 60,
+    onTick: (remaining) => {
+      if (remaining === 30) {
+        showNotification('Halfway through!');
+      } else if (remaining === 10) {
+        playSound('warning');
+      }
+    },
+    autoStart: true,
+  });
+
+  const getProgressColor = () => {
+    if (timer.progress < 50) return 'green';
+    if (timer.progress < 80) return 'orange';
+    return 'red';
+  };
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <progress 
+        value={timer.progress} 
+        max={100}
+        style={{ accentColor: getProgressColor() }}
+      />
+      <span className={timer.timeRemaining <= 10 ? 'warning' : ''}>
+        {timer.timeRemaining}s remaining
+      </span>
+    </div>
+  );
+}
+```
+
+### Formatted Time Display
+
+```tsx
+function FormattedTimerQuestion({ config }) {
+  const timer = useQuestionTimer({
+    timeLimit: 600, // 10 minutes
+    autoStart: true,
+  });
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <div className="timer-display">
+        <div className="time-remaining">
+          {formatTime(timer.timeRemaining)}
+        </div>
+        <div className="time-elapsed">
+          Elapsed: {formatTime(timer.timeElapsed)}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### Multiple Timers
+
+```tsx
+function MultiQuestionQuiz({ questions }) {
+  const timer1 = useQuestionTimer({ timeLimit: 60 });
+  const timer2 = useQuestionTimer({ timeLimit: 90 });
+  const timer3 = useQuestionTimer({ timeLimit: 45 });
+
+  const timers = [timer1, timer2, timer3];
+
+  return (
+    <div>
+      {questions.map((question, index) => (
+        <div key={question.id}>
+          <h3>{question.text}</h3>
+          <div>Time: {timers[index].timeRemaining}s</div>
+          <button onClick={timers[index].start}>Start</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Timer with Auto-submit
+
+```tsx
+function AutoSubmitQuestion({ config, onSubmit }) {
+  const [answer, setAnswer] = useState('');
+
+  const timer = useQuestionTimer({
+    timeLimit: 120,
+    onTimeUp: () => {
+      // Automatically submit when time runs out
+      onSubmit({
+        questionId: config.id,
+        answer: answer,
+        timeSpent: timer.timeElapsed,
+      });
+    },
+    autoStart: true,
+  });
+
+  const handleManualSubmit = () => {
+    timer.pause();
+    onSubmit({
+      questionId: config.id,
+      answer: answer,
+      timeSpent: timer.timeElapsed,
+    });
+  };
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <textarea
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        disabled={timer.isTimeUp}
+      />
+      <div>
+        <span>Time: {timer.timeRemaining}s</span>
+        <button 
+          onClick={handleManualSubmit}
+          disabled={timer.isTimeUp}
+        >
+          Submit Early
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Timer with Pause Functionality
+
+```tsx
+function PausableTimerQuestion({ config }) {
+  const timer = useQuestionTimer({
+    timeLimit: 180,
+    onTick: (remaining) => {
+      // Save progress every 10 seconds
+      if (remaining % 10 === 0) {
+        saveProgress({
+          timeRemaining: remaining,
+          timeElapsed: timer.timeElapsed,
+        });
+      }
+    },
+  });
+
+  return (
+    <div>
+      <h3>{config.question}</h3>
+      <div className="timer-status">
+        <span>{timer.timeRemaining}s</span>
+        <span>{timer.isRunning ? 'Running' : 'Paused'}</span>
+      </div>
+      <div className="controls">
+        {!timer.isRunning ? (
+          <button onClick={timer.timeElapsed > 0 ? timer.resume : timer.start}>
+            {timer.timeElapsed > 0 ? 'Resume' : 'Start'}
+          </button>
+        ) : (
+          <button onClick={timer.pause}>Pause</button>
+        )}
+        <button onClick={timer.reset}>Reset</button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Timer with Progress Stages
+
+```tsx
+function StagedTimerQuestion({ config }) {
+  const timer = useQuestionTimer({
+    timeLimit: 300,
+    onTick: (remaining) => {
+      // Different hints at different stages
+      if (remaining === 240) {
+        showHint('You have 4 minutes left');
+      } else if (remaining === 120) {
+        showHint('2 minutes remaining - start wrapping up');
+      } else if (remaining === 60) {
+        showHint('Final minute!');
+      }
+    },
+    autoStart: true,
+  });
+
+  const getStage = () => {
+    if (timer.progress < 33) return 'early';
+    if (timer.progress < 66) return 'middle';
+    return 'final';
+  };
+
+  return (
+    <div className={`stage-${getStage()}`}>
+      <h3>{config.question}</h3>
+      <div className="progress-indicator">
+        <div 
+          className="progress-bar"
+          style={{ width: `${timer.progress}%` }}
+        />
+      </div>
+      <p>Stage: {getStage()}</p>
+      <p>Time: {timer.timeRemaining}s</p>
+    </div>
+  );
+}
+```
+
+## Timer Behavior
+
+### Update Interval
+- The timer updates every second (1000ms interval)
+- Updates are synchronized with the system clock for accuracy
+
+### Automatic Stop
+- When time reaches zero, the timer automatically stops
+- The `onTimeUp` callback is triggered
+- `isTimeUp` is set to `true`
+- `isRunning` is set to `false`
+
+### State Transitions
+```
+not started → running (via start())
+running → paused (via pause())
+paused → running (via resume())
+any state → reset (via reset())
+running → stopped (when time reaches 0)
+```
+
+### Progress Calculation
+```typescript
+progress = ((timeLimit - timeRemaining) / timeLimit) * 100
+
+// Examples:
+// timeLimit: 60, timeRemaining: 60 → progress: 0%
+// timeLimit: 60, timeRemaining: 30 → progress: 50%
+// timeLimit: 60, timeRemaining: 0  → progress: 100%
+```
+
+## TypeScript
+
+Full TypeScript support with exported interfaces:
+
+```tsx
+import { useQuestionTimer } from './hooks/useQuestionTimer';
+import type { 
+  UseQuestionTimerOptions, 
+  UseQuestionTimerReturn 
+} from './hooks/useQuestionTimer';
+
+// Type-safe configuration
+const options: UseQuestionTimerOptions = {
+  timeLimit: 120,
+  onTimeUp: () => console.log('Done'),
+  onTick: (remaining: number) => console.log(remaining),
+  autoStart: false,
+};
+
+const timer: UseQuestionTimerReturn = useQuestionTimer(options);
+```
+
+## Best Practices
+
+1. **Always Provide timeLimit**: The timer requires a `timeLimit` to function properly.
+
+2. **Clean Up Side Effects**: Use `onTimeUp` and `onTick` callbacks for side effects rather than external intervals.
+
+3. **Handle Edge Cases**: Check `isTimeUp` before allowing interactions.
+
+4. **Display Progress**: Use the `progress` property for visual feedback rather than calculating manually.
+
+5. **Save State**: Use `onTick` to periodically save timer state for recovery.
+
+6. **Format Time**: Create reusable time formatting utilities for consistent display.
+
+7. **Accessibility**: Announce time warnings to screen readers at critical intervals.
+
+## Common Patterns
+
+### Conditional Auto-start
+```tsx
+const timer = useQuestionTimer({
+  timeLimit: 60,
+  autoStart: userHasStartedQuiz,
+});
+```
+
+### Timer with Warnings
+```tsx
+const timer = useQuestionTimer({
+  timeLimit: 120,
+  onTick: (remaining) => {
+    if (remaining === 60) showWarning('1 minute left');
+    if (remaining === 30) showWarning('30 seconds left');
+    if (remaining === 10) showWarning('10 seconds - hurry!');
+  },
+});
+```
+
+### Persistent Timer State
+```tsx
+function PersistentTimer() {
+  const [savedTime, setSavedTime] = useState(() => 
+    parseInt(localStorage.getItem('timerRemaining') || '0')
+  );
+
+  const timer = useQuestionTimer({
+    timeLimit: savedTime || 300,
+    onTick: (remaining) => {
+      localStorage.setItem('timerRemaining', remaining.toString());
+    },
+  });
+
+  return <div>Time: {timer.timeRemaining}s</div>;
+}
+```
+
+## Related Hooks
+
+- **useQuestionState**: Manage question state including time spent
+- **useQuestionValidation**: Validate answers before submission
+- **useQuestion**: Access question context
+
+## Notes
+
+- Timer updates every 1000ms (1 second)
+- Cleanup is handled automatically on component unmount
+- Multiple calls to `start()` on a running timer have no effect
+- The `reset()` method clears `isTimeUp` and restores full time
+- `onTick` callback receives the updated `timeRemaining` value
+- Progress is always between 0 and 100

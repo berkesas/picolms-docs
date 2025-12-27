@@ -1,0 +1,457 @@
+---
+id: base-question
+title: BaseQuestion
+sidebar_label: BaseQuestion
+---
+
+# BaseQuestion
+
+The `BaseQuestion` component is the foundational component for all question types in Pico LMS. It provides core functionality for question state management, validation, timing, and feedback handling.
+
+## Overview
+
+`BaseQuestion` is a wrapper component that manages the common logic shared across different question types (multiple choice, short answer, etc.). It handles:
+
+- **State Management**: Controlled and uncontrolled modes
+- **Validation**: Answer validation with custom rules
+- **Timing**: Optional time limits with automatic submission
+- **Feedback**: Display of correct/incorrect feedback
+- **Attempts**: Tracking and limiting submission attempts
+- **Accessibility**: ARIA labels and descriptions
+
+## Import
+```tsx
+import { BaseQuestion } from '@scinforma/picolms';
+```
+
+## Basic Usage
+
+### Uncontrolled Mode
+```tsx
+<BaseQuestion
+  config={{
+    id: 'q1',
+    type: 'multiple-choice',
+    question: 'What is 2 + 2?',
+    points: 10,
+  }}
+  onAnswerChange={(answer) => console.log(answer)}
+  onSubmit={(answer) => console.log('Submitted:', answer)}
+>
+  {/* Question content goes here */}
+</BaseQuestion>
+```
+
+### Controlled Mode
+```tsx
+const [answer, setAnswer] = useState<QuestionAnswer>();
+
+<BaseQuestion
+  config={{
+    id: 'q1',
+    type: 'multiple-choice',
+    question: 'What is 2 + 2?',
+  }}
+  answer={answer}
+  onAnswerChange={setAnswer}
+>
+  {/* Question content goes here */}
+</BaseQuestion>
+```
+
+## Props
+
+### Required Props
+
+#### `config`
+- **Type**: `QuestionConfig`
+- **Description**: Configuration object defining the question's properties, validation rules, feedback, and behavior.
+```tsx
+config={{
+  id: 'question-1',
+  type: 'multiple-choice',
+  question: 'What is the capital of France?',
+  points: 10,
+  maxAttempts: 3,
+  timeLimit: 60,
+}}
+```
+
+### Optional Props
+
+#### `answer`
+- **Type**: `QuestionAnswer<T>`
+- **Default**: `undefined`
+- **Description**: External answer value for controlled mode. When provided, the component operates in controlled mode.
+```tsx
+answer={{
+  questionId: 'q1',
+  value: 'Paris',
+  isAnswered: true,
+  attemptNumber: 1,
+  timeSpent: 15,
+  timestamp: '2025-01-01T12:00:00Z',
+}}
+```
+
+#### `initialAnswer`
+- **Type**: `T`
+- **Default**: `undefined`
+- **Description**: Initial answer value for uncontrolled mode.
+```tsx
+initialAnswer="Paris"
+```
+
+#### `children`
+- **Type**: `ReactNode`
+- **Description**: Child components that render the question's UI (input fields, options, etc.).
+
+#### `renderContent`
+- **Type**: `ContentRenderer`
+- **Description**: Custom renderer function for question content. Useful for rendering markdown, LaTeX, or custom formatting.
+```tsx
+renderContent={(content) => <Markdown>{content}</Markdown>}
+```
+
+#### `onAnswerChange`
+- **Type**: `(answer: QuestionAnswer<T>) => void`
+- **Description**: Callback fired when the answer changes. Receives the full answer object.
+```tsx
+onAnswerChange={(answer) => {
+  console.log('Answer:', answer.value);
+  console.log('Time spent:', answer.timeSpent);
+}}
+```
+
+#### `onSubmit`
+- **Type**: `(answer: QuestionAnswer<T>) => void`
+- **Description**: Callback fired when the question is submitted (either manually or when time runs out).
+```tsx
+onSubmit={(answer) => {
+  saveAnswer(answer);
+}}
+```
+
+#### `onValidationChange`
+- **Type**: `(result: ValidationResult) => void`
+- **Description**: Callback fired when validation results change.
+```tsx
+onValidationChange={(result) => {
+  if (!result.isValid) {
+    console.log('Errors:', result.errors);
+  }
+}}
+```
+
+#### `showFeedback`
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Whether to display feedback messages (correct/incorrect) to the user.
+
+#### `showCheckButton`
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Whether to display a "Check Answer" button for validation before submission.
+
+#### `disabled`
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Whether the question is disabled. Disabled questions cannot be answered or submitted.
+
+#### `className`
+- **Type**: `string`
+- **Description**: Additional CSS class names to apply to the wrapper div.
+
+#### `aria-label`
+- **Type**: `string`
+- **Description**: Custom ARIA label for accessibility. Defaults to the question text.
+
+## QuestionConfig Object
+
+The `config` prop accepts a `QuestionConfig` object with the following properties:
+
+### Core Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the question |
+| `type` | `string` | Yes | Type of question (e.g., 'multiple-choice', 'short-answer') |
+| `question` | `string` | Yes | The question text |
+| `points` | `number` | No | Points awarded for correct answer |
+| `maxAttempts` | `number` | No | Maximum number of attempts allowed (default: `Infinity`) |
+| `timeLimit` | `number` | No | Time limit in seconds |
+
+### Validation
+```tsx
+config={{
+  // ... other properties
+  validation: {
+    rules: [
+      { type: 'required', message: 'Answer is required' },
+      { type: 'minLength', value: 10, message: 'At least 10 characters' },
+    ],
+    validateOnChange: true,
+  },
+}}
+```
+
+### Feedback
+```tsx
+config={{
+  // ... other properties
+  feedback: {
+    correct: {
+      message: 'Correct! Well done.',
+      type: 'success',
+    },
+    incorrect: {
+      message: 'Not quite. Try again.',
+      type: 'error',
+    },
+  },
+}}
+```
+
+### Accessibility
+```tsx
+config={{
+  // ... other properties
+  accessibility: {
+    ariaLabel: 'Multiple choice question about capitals',
+    ariaDescribedBy: 'question-hint',
+  },
+}}
+```
+
+## QuestionAnswer Object
+
+The answer object passed to callbacks has the following structure:
+```tsx
+interface QuestionAnswer<T> {
+  questionId: string;      // ID of the question
+  value: T;                // The actual answer value
+  isAnswered: boolean;     // Whether the question has been answered
+  attemptNumber: number;   // Current attempt number
+  timeSpent: number;       // Time spent in seconds
+  timestamp: string;       // ISO timestamp when answered
+}
+```
+
+## Context
+
+`BaseQuestion` provides a `QuestionContext` that child components can access using the `useQuestion` hook:
+```tsx
+import { useQuestion } from '@scinforma/picolms';
+
+function CustomQuestionInput() {
+  const {
+    answer,
+    setAnswer,
+    isLocked,
+    validation,
+    submit,
+  } = useQuestion();
+
+  return (
+    <input
+      value={answer?.value || ''}
+      onChange={(e) => setAnswer(e.target.value)}
+      disabled={isLocked}
+    />
+  );
+}
+```
+
+### Context Values
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `config` | `QuestionConfig` | The question configuration |
+| `answer` | `QuestionAnswer<T>` | Current answer object |
+| `setAnswer` | `(value: T) => void` | Update the answer value |
+| `clearAnswer` | `() => void` | Clear the current answer |
+| `status` | `string` | Question status ('unanswered', 'answered', 'submitted', 'graded') |
+| `attemptNumber` | `number` | Current attempt number |
+| `timeSpent` | `number` | Time spent in seconds |
+| `isAnswered` | `boolean` | Whether the question has been answered |
+| `validation` | `ValidationResult` | Current validation state |
+| `validate` | `() => Promise<ValidationResult>` | Manually trigger validation |
+| `isLocked` | `boolean` | Whether the question is locked (disabled, submitted, or time's up) |
+| `submit` | `() => void` | Submit the question |
+| `feedback` | `Feedback` | Current feedback message |
+
+## Locking Behavior
+
+A question becomes locked (non-interactive) when:
+
+1. The `disabled` prop is `true`
+2. The question status is `'submitted'` or `'graded'`
+3. The maximum number of attempts has been exceeded
+4. The time limit has been reached
+
+When locked, users cannot modify their answer or submit the question.
+
+## Examples
+
+### With Validation
+```tsx
+<BaseQuestion
+  config={{
+    id: 'q1',
+    type: 'short-answer',
+    question: 'Explain photosynthesis',
+    validation: {
+      rules: [
+        { type: 'required', message: 'Answer is required' },
+        { type: 'minLength', value: 50, message: 'Minimum 50 characters' },
+      ],
+      validateOnChange: true,
+    },
+  }}
+  showFeedback
+  onValidationChange={(result) => {
+    console.log('Valid:', result.isValid);
+  }}
+>
+  <QuestionInput />
+</BaseQuestion>
+```
+
+### With Time Limit
+```tsx
+<BaseQuestion
+  config={{
+    id: 'q2',
+    type: 'multiple-choice',
+    question: 'Quick! What is 5 × 7?',
+    timeLimit: 30, // 30 seconds
+  }}
+  onSubmit={(answer) => {
+    console.log('Time up! Answer:', answer);
+  }}
+>
+  <MultipleChoiceOptions />
+</BaseQuestion>
+```
+
+### With Attempt Limit
+```tsx
+<BaseQuestion
+  config={{
+    id: 'q3',
+    type: 'multiple-choice',
+    question: 'What is the largest planet?',
+    maxAttempts: 3,
+    feedback: {
+      incorrect: {
+        message: 'Try again!',
+        type: 'error',
+      },
+      correct: {
+        message: 'Correct!',
+        type: 'success',
+      },
+    },
+  }}
+  showFeedback
+  showCheckButton
+>
+  <MultipleChoiceOptions />
+</BaseQuestion>
+```
+
+### With Custom Content Renderer
+```tsx
+import ReactMarkdown from 'react-markdown';
+
+<BaseQuestion
+  config={{
+    id: 'q4',
+    type: 'short-answer',
+    question: 'Explain **Newton\'s First Law** in your own words.',
+  }}
+  renderContent={(content) => (
+    <ReactMarkdown>{content}</ReactMarkdown>
+  )}
+>
+  <QuestionInput />
+</BaseQuestion>
+```
+
+## Accessibility
+
+`BaseQuestion` includes built-in accessibility features:
+
+- **ARIA Labels**: Automatically provides appropriate ARIA labels
+- **Role**: Uses `role="group"` for semantic grouping
+- **Keyboard Navigation**: Supports standard keyboard interactions
+- **Screen Reader Support**: Announces validation errors and feedback
+
+### Custom Accessibility
+```tsx
+<BaseQuestion
+  config={{
+    id: 'q5',
+    type: 'multiple-choice',
+    question: 'Select the correct answer',
+    accessibility: {
+      ariaLabel: 'Geography question about world capitals',
+      ariaDescribedBy: 'hint-text',
+    },
+  }}
+  aria-label="Custom question label"
+>
+  <div id="hint-text">Hint: Think of European cities</div>
+  <MultipleChoiceOptions />
+</BaseQuestion>
+```
+
+## TypeScript
+
+The component is fully typed with TypeScript generics:
+```tsx
+interface MyAnswerType {
+  selectedOption: string;
+  confidence: number;
+}
+
+<BaseQuestion<MyAnswerType>
+  config={config}
+  initialAnswer={{ selectedOption: 'A', confidence: 0.8 }}
+  onAnswerChange={(answer) => {
+    // answer.value is typed as MyAnswerType
+    console.log(answer.value.selectedOption);
+    console.log(answer.value.confidence);
+  }}
+>
+  {/* ... */}
+</BaseQuestion>
+```
+
+## Best Practices
+
+1. **Use Controlled Mode for Complex Forms**: When managing multiple questions or complex state, use controlled mode with external state management.
+
+2. **Provide Clear Feedback**: Use the `feedback` configuration to guide users toward correct answers.
+
+3. **Set Reasonable Time Limits**: If using time limits, ensure they're appropriate for the question complexity.
+
+4. **Validate Thoughtfully**: Use `validateOnChange: false` for complex questions to avoid overwhelming users with errors.
+
+5. **Accessibility First**: Always provide meaningful ARIA labels and descriptions for screen reader users.
+
+6. **Handle Submissions Gracefully**: Use the `onSubmit` callback to save answers and provide confirmation to users.
+
+## Related Components
+
+- **MultipleChoiceQuestion**: Specialized component for multiple choice questions
+- **ShortAnswerQuestion**: Specialized component for text-based answers
+- **QuestionInput**: Input component that integrates with BaseQuestion context
+- **QuestionFeedback**: Display component for feedback messages
+
+## Related Hooks
+
+- **useQuestion**: Access question context in child components
+- **useQuestionState**: Internal hook for state management
+- **useQuestionValidation**: Internal hook for validation logic
+- **useQuestionTimer**: Internal hook for timing functionality
