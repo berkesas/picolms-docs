@@ -1,0 +1,1415 @@
+---
+id: question-types
+title: Question Types
+sidebar_label: Question Types
+---
+
+# Question Types
+
+TypeScript types and interfaces for all question types and configurations in the PicoLMS library.
+
+## Overview
+
+The question types module provides:
+
+- **Question Type Definitions**: All supported question types
+- **Base Configuration**: Shared properties across all question types
+- **Type-Specific Configs**: Specialized configurations for each question type
+- **Answer Types**: Type-safe answer structures
+- **Validation**: Question validation configuration
+- **Submission Tracking**: Status and grading information
+
+## Import
+```tsx
+import type {
+  QuestionType,
+  QuestionConfig,
+  BaseQuestionConfig,
+  QuestionAnswer,
+  MultipleChoiceConfig,
+  TrueOrFalseConfig,
+  ShortAnswerConfig,
+  EssayConfig,
+  FillInBlankConfig,
+  MatchingConfig,
+  SubmissionStatus,
+  QuestionSubmission,
+  QuestionState,
+} from '@scinforma/picolms';
+```
+
+---
+
+## Types
+
+### `QuestionType`
+
+Enumeration of all supported question types.
+```typescript
+type QuestionType =
+  | 'multiple-choice'
+  | 'true-false'
+  | 'short-answer'
+  | 'essay'
+  | 'fill-in-blank'
+  | 'matching'
+  | 'ordering'
+  | 'file-upload';
+```
+
+#### Values
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| `'multiple-choice'` | Single or multiple selection from options | Objective assessment, quizzes |
+| `'true-false'` | Binary true/false selection | Quick checks, fact verification |
+| `'short-answer'` | Brief text response | Definitions, calculations |
+| `'essay'` | Extended text response | Detailed explanations, analysis |
+| `'fill-in-blank'` | Complete text with missing words | Vocabulary, comprehension |
+| `'matching'` | Match items from two columns | Associations, relationships |
+| `'ordering'` | Arrange items in sequence | Process steps, chronology |
+| `'file-upload'` | Upload document or file | Assignments, projects |
+
+#### Example
+```tsx
+import { QuestionType } from '@scinforma/picolms';
+
+const questionType: QuestionType = 'multiple-choice';
+
+// Type guard
+function isMultipleChoice(type: QuestionType): boolean {
+  return type === 'multiple-choice';
+}
+
+// Filter by type
+const mcQuestions = allQuestions.filter(
+  q => q.type === 'multiple-choice'
+);
+```
+
+---
+
+### `SubmissionStatus`
+
+Status of question submission and grading.
+```typescript
+type SubmissionStatus = 'not-started' | 'in-progress' | 'submitted' | 'graded';
+```
+
+#### Values
+
+| Status | Description | Typical UI State |
+|--------|-------------|------------------|
+| `'not-started'` | Question hasn't been interacted with | Enable all controls |
+| `'in-progress'` | User is answering | Allow editing |
+| `'submitted'` | Answer has been submitted | Disable editing, show feedback |
+| `'graded'` | Answer has been graded | Show score and detailed feedback |
+
+#### Example
+```tsx
+import { SubmissionStatus } from '@scinforma/picolms';
+
+function QuestionStatus({ status }: { status: SubmissionStatus }) {
+  const statusConfig = {
+    'not-started': { label: 'Not Started', color: 'gray' },
+    'in-progress': { label: 'In Progress', color: 'blue' },
+    'submitted': { label: 'Submitted', color: 'green' },
+    'graded': { label: 'Graded', color: 'purple' },
+  };
+
+  const config = statusConfig[status];
+
+  return (
+    <span className={`badge badge-${config.color}`}>
+      {config.label}
+    </span>
+  );
+}
+```
+
+---
+
+## Base Interfaces
+
+### `BaseQuestionConfig`
+
+Base configuration interface that all question types extend.
+```typescript
+interface BaseQuestionConfig {
+  id: string;
+  type: QuestionType;
+  title?: string;
+  question: string;
+  instructions?: string;
+  points: number;
+  required?: boolean;
+  difficulty?: DifficultyLevel;
+  tags?: string[];
+  category?: string;
+  media?: MediaAttachment[];
+  feedback?: {
+    correct?: Feedback;
+    incorrect?: Feedback;
+    partial?: Feedback;
+    hints?: string[];
+  };
+  timeLimit?: number;
+  maxAttempts?: number;
+  accessibility?: AccessibilityConfig;
+  validation?: QuestionValidationConfig;
+  metadata?: BaseMetadata;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the question |
+| `type` | `QuestionType` | Yes | Type of question |
+| `title` | `string` | No | Optional title (separate from question text) |
+| `question` | `string` | Yes | Main question text (supports HTML) |
+| `instructions` | `string` | No | Additional instructions for answering |
+| `points` | `number` | Yes | Point value for correct answer |
+| `required` | `boolean` | No | Whether answering is required |
+| `difficulty` | `DifficultyLevel` | No | Difficulty level classification |
+| `tags` | `string[]` | No | Tags for categorization |
+| `category` | `string` | No | Category grouping |
+| `media` | `MediaAttachment[]` | No | Attached media files |
+| `feedback` | `object` | No | Feedback configuration |
+| `timeLimit` | `number` | No | Time limit in seconds |
+| `maxAttempts` | `number` | No | Maximum number of attempts allowed |
+| `accessibility` | `AccessibilityConfig` | No | Accessibility configuration |
+| `validation` | `QuestionValidationConfig` | No | Validation rules |
+| `metadata` | `BaseMetadata` | No | Additional metadata |
+
+#### Example
+```tsx
+import { BaseQuestionConfig } from '@scinforma/picolms';
+
+const baseConfig: BaseQuestionConfig = {
+  id: 'q1',
+  type: 'short-answer',
+  title: 'Newton\'s First Law',
+  question: 'Explain Newton\'s First Law of Motion in your own words.',
+  instructions: 'Write at least 50 words.',
+  points: 10,
+  required: true,
+  difficulty: 'beginner',
+  tags: ['physics', 'mechanics', 'newton'],
+  category: 'Classical Mechanics',
+  timeLimit: 300, // 5 minutes
+  maxAttempts: 3,
+  feedback: {
+    correct: {
+      type: 'correct',
+      message: 'Excellent explanation!',
+      showAfter: 'submission',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Review the concept of inertia.',
+      showAfter: 'submission',
+    },
+    hints: [
+      'Think about objects at rest',
+      'Consider the role of force',
+    ],
+  },
+};
+```
+
+---
+
+### `QuestionAnswer<T>`
+
+Generic answer state for any question type.
+```typescript
+interface QuestionAnswer<T = any> {
+  questionId: string;
+  value: T;
+  isAnswered: boolean;
+  attemptNumber: number;
+  timeSpent?: number;
+  timestamp?: string;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `questionId` | `string` | Yes | ID of the associated question |
+| `value` | `T` | Yes | The answer value (type varies by question type) |
+| `isAnswered` | `boolean` | Yes | Whether the question has been answered |
+| `attemptNumber` | `number` | Yes | Current attempt number (starts at 1) |
+| `timeSpent` | `number` | No | Time spent on question in seconds |
+| `timestamp` | `string` | No | ISO timestamp of last update |
+
+#### Type Parameter
+
+The generic type `T` represents the answer value type:
+- `string` for short-answer and essay
+- `boolean` for true-false
+- `string | string[]` for multiple-choice
+- `Record<string, string>` for fill-in-blank and matching
+
+#### Example
+```tsx
+import { QuestionAnswer } from '@scinforma/picolms';
+
+// Short answer
+const shortAnswer: QuestionAnswer<string> = {
+  questionId: 'q1',
+  value: 'An object at rest stays at rest unless acted upon by a force.',
+  isAnswered: true,
+  attemptNumber: 1,
+  timeSpent: 45,
+  timestamp: '2024-12-29T10:30:00Z',
+};
+
+// Multiple choice (single)
+const mcAnswer: QuestionAnswer<string> = {
+  questionId: 'q2',
+  value: 'option-b',
+  isAnswered: true,
+  attemptNumber: 1,
+  timeSpent: 15,
+  timestamp: '2024-12-29T10:31:00Z',
+};
+
+// Multiple choice (multiple)
+const multiSelectAnswer: QuestionAnswer<string[]> = {
+  questionId: 'q3',
+  value: ['option-a', 'option-c', 'option-d'],
+  isAnswered: true,
+  attemptNumber: 2,
+  timeSpent: 60,
+  timestamp: '2024-12-29T10:32:00Z',
+};
+
+// Fill in blank
+const fillInBlankAnswer: QuestionAnswer<Record<string, string>> = {
+  questionId: 'q4',
+  value: {
+    'blank-1': 'inertia',
+    'blank-2': 'force',
+    'blank-3': 'acceleration',
+  },
+  isAnswered: true,
+  attemptNumber: 1,
+  timeSpent: 90,
+  timestamp: '2024-12-29T10:33:00Z',
+};
+```
+
+---
+
+### `ValidationRule`
+
+Individual validation rule configuration.
+```typescript
+interface ValidationRule {
+  type: 'required' | 'minLength' | 'maxLength' | 'pattern' | 'custom';
+  value?: any;
+  message: string;
+  validate?: (value: any) => boolean | Promise<boolean>;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | `string` | Yes | Type of validation rule |
+| `value` | `any` | No | Rule-specific value (e.g., min length number) |
+| `message` | `string` | Yes | Error message to display when validation fails |
+| `validate` | `function` | No | Custom validation function (for `type: 'custom'`) |
+
+#### Validation Types
+
+| Type | Description | Value Type | Example |
+|------|-------------|------------|---------|
+| `'required'` | Field must not be empty | N/A | Required field |
+| `'minLength'` | Minimum string length | `number` | At least 10 characters |
+| `'maxLength'` | Maximum string length | `number` | No more than 500 characters |
+| `'pattern'` | Regex pattern match | `string` | Email format validation |
+| `'custom'` | Custom validation function | `function` | Complex business logic |
+
+#### Example
+```tsx
+import { ValidationRule } from '@scinforma/picolms';
+
+// Required validation
+const requiredRule: ValidationRule = {
+  type: 'required',
+  message: 'This field is required',
+};
+
+// Min length validation
+const minLengthRule: ValidationRule = {
+  type: 'minLength',
+  value: 50,
+  message: 'Answer must be at least 50 characters',
+};
+
+// Max length validation
+const maxLengthRule: ValidationRule = {
+  type: 'maxLength',
+  value: 500,
+  message: 'Answer must not exceed 500 characters',
+};
+
+// Pattern validation (email)
+const emailRule: ValidationRule = {
+  type: 'pattern',
+  value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+  message: 'Please enter a valid email address',
+};
+
+// Custom validation
+const customRule: ValidationRule = {
+  type: 'custom',
+  message: 'Answer must contain at least one number',
+  validate: (value: string) => /\d/.test(value),
+};
+
+// Async custom validation
+const asyncRule: ValidationRule = {
+  type: 'custom',
+  message: 'This username is already taken',
+  validate: async (value: string) => {
+    const response = await fetch(`/api/check-username?username=${value}`);
+    const data = await response.json();
+    return data.available;
+  },
+};
+```
+
+---
+
+### `QuestionValidationConfig`
+
+Configuration for question validation behavior.
+```typescript
+interface QuestionValidationConfig {
+  rules?: ValidationRule[];
+  validateOnChange?: boolean;
+  validateOnBlur?: boolean;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `rules` | `ValidationRule[]` | No | `[]` | Array of validation rules to apply |
+| `validateOnChange` | `boolean` | No | `false` | Run validation on every change |
+| `validateOnBlur` | `boolean` | No | `true` | Run validation when field loses focus |
+
+#### Example
+```tsx
+import { QuestionValidationConfig } from '@scinforma/picolms';
+
+const validationConfig: QuestionValidationConfig = {
+  rules: [
+    {
+      type: 'required',
+      message: 'Answer is required',
+    },
+    {
+      type: 'minLength',
+      value: 50,
+      message: 'Answer must be at least 50 characters',
+    },
+    {
+      type: 'custom',
+      message: 'Answer must mention Newton',
+      validate: (value: string) => value.toLowerCase().includes('newton'),
+    },
+  ],
+  validateOnChange: false,
+  validateOnBlur: true,
+};
+
+// Use in question config
+const questionConfig: ShortAnswerConfig = {
+  id: 'q1',
+  type: 'short-answer',
+  question: 'Explain Newton\'s First Law',
+  points: 10,
+  validation: validationConfig,
+};
+```
+
+---
+
+## Question Type-Specific Interfaces
+
+### Multiple Choice
+
+#### `MultipleChoiceOption`
+
+Individual option in a multiple choice question.
+```typescript
+interface MultipleChoiceOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  feedback?: string;
+  media?: MediaAttachment;
+}
+```
+
+**Properties:**
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the option |
+| `text` | `string` | Yes | Option text to display |
+| `isCorrect` | `boolean` | Yes | Whether this is a correct answer |
+| `feedback` | `string` | No | Feedback specific to this option |
+| `media` | `MediaAttachment` | No | Media attachment for this option |
+
+#### `MultipleChoiceConfig`
+
+Configuration for multiple choice questions.
+```typescript
+interface MultipleChoiceConfig extends BaseQuestionConfig {
+  type: 'multiple-choice';
+  options: MultipleChoiceOption[];
+  allowMultiple?: boolean;
+  shuffleOptions?: boolean;
+  displayAs?: 'radio' | 'checkbox' | 'buttons' | 'dropdown';
+  minSelections?: number;
+  maxSelections?: number;
+}
+```
+
+**Additional Properties:**
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `options` | `MultipleChoiceOption[]` | Yes | - | Array of answer options |
+| `allowMultiple` | `boolean` | No | `false` | Allow selecting multiple answers |
+| `shuffleOptions` | `boolean` | No | `false` | Randomize option order |
+| `displayAs` | `string` | No | `'radio'` | UI display style |
+| `minSelections` | `number` | No | - | Minimum selections required (multi-select) |
+| `maxSelections` | `number` | No | - | Maximum selections allowed (multi-select) |
+
+#### `MultipleChoiceAnswer`
+```typescript
+type MultipleChoiceAnswer = string | string[];
+```
+
+Single option ID (string) for single-select, or array of option IDs (string[]) for multi-select.
+
+#### Example
+```tsx
+import { MultipleChoiceConfig, MultipleChoiceAnswer } from '@scinforma/picolms';
+
+// Single select question
+const singleSelectConfig: MultipleChoiceConfig = {
+  id: 'mc-1',
+  type: 'multiple-choice',
+  question: 'What is the capital of France?',
+  points: 5,
+  options: [
+    { id: 'opt-a', text: 'London', isCorrect: false },
+    { id: 'opt-b', text: 'Paris', isCorrect: true, feedback: 'Correct!' },
+    { id: 'opt-c', text: 'Berlin', isCorrect: false },
+    { id: 'opt-d', text: 'Madrid', isCorrect: false },
+  ],
+  displayAs: 'radio',
+  shuffleOptions: true,
+};
+
+const singleAnswer: MultipleChoiceAnswer = 'opt-b';
+
+// Multi-select question
+const multiSelectConfig: MultipleChoiceConfig = {
+  id: 'mc-2',
+  type: 'multiple-choice',
+  question: 'Which of the following are primary colors?',
+  points: 10,
+  allowMultiple: true,
+  minSelections: 1,
+  maxSelections: 3,
+  options: [
+    { id: 'opt-a', text: 'Red', isCorrect: true },
+    { id: 'opt-b', text: 'Blue', isCorrect: true },
+    { id: 'opt-c', text: 'Yellow', isCorrect: true },
+    { id: 'opt-d', text: 'Green', isCorrect: false },
+    { id: 'opt-e', text: 'Purple', isCorrect: false },
+  ],
+  displayAs: 'checkbox',
+};
+
+const multiAnswer: MultipleChoiceAnswer = ['opt-a', 'opt-b', 'opt-c'];
+
+// With media
+const withMediaConfig: MultipleChoiceConfig = {
+  id: 'mc-3',
+  type: 'multiple-choice',
+  question: 'Which diagram shows a parallel circuit?',
+  points: 5,
+  options: [
+    {
+      id: 'opt-a',
+      text: 'Diagram A',
+      isCorrect: false,
+      media: {
+        id: 'img-a',
+        type: 'image',
+        url: '/images/circuit-a.png',
+        alt: 'Circuit diagram A',
+      },
+    },
+    {
+      id: 'opt-b',
+      text: 'Diagram B',
+      isCorrect: true,
+      media: {
+        id: 'img-b',
+        type: 'image',
+        url: '/images/circuit-b.png',
+        alt: 'Circuit diagram B',
+      },
+    },
+  ],
+  displayAs: 'buttons',
+};
+```
+
+---
+
+### True/False
+
+#### `TrueOrFalseConfig`
+
+Configuration for true/false questions.
+```typescript
+interface TrueOrFalseConfig extends BaseQuestionConfig {
+  type: 'true-false';
+  correctAnswer: boolean;
+  displayAs?: 'radio' | 'buttons' | 'toggle';
+}
+```
+
+**Additional Properties:**
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `correctAnswer` | `boolean` | Yes | - | The correct answer (true or false) |
+| `displayAs` | `string` | No | `'radio'` | UI display style |
+
+#### `TrueOrFalseAnswer`
+```typescript
+type TrueOrFalseAnswer = boolean;
+```
+
+#### Example
+```tsx
+import { TrueOrFalseConfig, TrueOrFalseAnswer } from '@scinforma/picolms';
+
+const tfConfig: TrueOrFalseConfig = {
+  id: 'tf-1',
+  type: 'true-false',
+  question: 'The Earth revolves around the Sun.',
+  points: 2,
+  correctAnswer: true,
+  displayAs: 'buttons',
+  feedback: {
+    correct: {
+      type: 'correct',
+      message: 'Correct! The Earth orbits the Sun.',
+      showAfter: 'immediate',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Incorrect. The Earth revolves around the Sun, not vice versa.',
+      showAfter: 'immediate',
+    },
+  },
+};
+
+const answer: TrueOrFalseAnswer = true;
+```
+
+---
+
+### Short Answer
+
+#### `ShortAnswerConfig`
+
+Configuration for short answer questions.
+```typescript
+interface ShortAnswerConfig extends BaseQuestionConfig {
+  type: 'short-answer';
+  correctAnswers?: string[];
+  caseSensitive?: boolean;
+  trimWhitespace?: boolean;
+  maxLength?: number;
+  minLength?: number;
+  pattern?: string;
+  placeholder?: string;
+  validation?: QuestionValidationConfig;
+}
+```
+
+**Additional Properties:**
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `correctAnswers` | `string[]` | No | - | Multiple acceptable answers for auto-grading |
+| `caseSensitive` | `boolean` | No | `false` | Whether answer matching is case-sensitive |
+| `trimWhitespace` | `boolean` | No | `true` | Trim whitespace before validation |
+| `maxLength` | `number` | No | - | Maximum character length |
+| `minLength` | `number` | No | - | Minimum character length |
+| `pattern` | `string` | No | - | Regex pattern for validation |
+| `placeholder` | `string` | No | - | Placeholder text for input |
+
+#### `ShortAnswerAnswer`
+```typescript
+type ShortAnswerAnswer = string;
+```
+
+#### Example
+```tsx
+import { ShortAnswerConfig, ShortAnswerAnswer } from '@scinforma/picolms';
+
+const shortAnswerConfig: ShortAnswerConfig = {
+  id: 'sa-1',
+  type: 'short-answer',
+  question: 'What is the chemical symbol for water?',
+  points: 3,
+  correctAnswers: ['H2O', 'H₂O'],
+  caseSensitive: false,
+  trimWhitespace: true,
+  maxLength: 10,
+  placeholder: 'Enter chemical formula',
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Answer is required',
+      },
+      {
+        type: 'maxLength',
+        value: 10,
+        message: 'Answer too long',
+      },
+    ],
+    validateOnBlur: true,
+  },
+};
+
+const answer: ShortAnswerAnswer = 'H2O';
+
+// With pattern validation
+const emailConfig: ShortAnswerConfig = {
+  id: 'sa-2',
+  type: 'short-answer',
+  question: 'Enter your email address',
+  points: 0,
+  pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+  placeholder: 'you@example.com',
+};
+```
+
+---
+
+### Essay
+
+#### `EssayConfig`
+
+Configuration for essay questions.
+```typescript
+interface EssayConfig extends BaseQuestionConfig {
+  type: 'essay';
+  minWords?: number;
+  maxWords?: number;
+  minCharacters?: number;
+  maxCharacters?: number;
+  placeholder?: string;
+  enableRichText?: boolean;
+}
+```
+
+**Additional Properties:**
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `minWords` | `number` | No | - | Minimum word count |
+| `maxWords` | `number` | No | - | Maximum word count |
+| `minCharacters` | `number` | No | - | Minimum character count |
+| `maxCharacters` | `number` | No | - | Maximum character count |
+| `placeholder` | `string` | No | - | Placeholder text for textarea |
+| `enableRichText` | `boolean` | No | `false` | Enable rich text editor |
+
+#### `EssayAnswer`
+```typescript
+type EssayAnswer = string;
+```
+
+#### Example
+```tsx
+import { EssayConfig, EssayAnswer } from '@scinforma/picolms';
+
+const essayConfig: EssayConfig = {
+  id: 'essay-1',
+  type: 'essay',
+  question: 'Discuss the impact of the Industrial Revolution on society.',
+  instructions: 'Write a comprehensive essay addressing economic, social, and technological changes.',
+  points: 50,
+  minWords: 300,
+  maxWords: 1000,
+  minCharacters: 1500,
+  placeholder: 'Begin your essay here...',
+  enableRichText: true,
+  timeLimit: 3600, // 1 hour
+};
+
+const answer: EssayAnswer = `The Industrial Revolution, which began in the late 18th century...`;
+
+// Word count helper
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// Validation
+function validateEssay(answer: string, config: EssayConfig): boolean {
+  const wordCount = countWords(answer);
+  
+  if (config.minWords && wordCount < config.minWords) return false;
+  if (config.maxWords && wordCount > config.maxWords) return false;
+  
+  return true;
+}
+```
+
+---
+
+### Fill in the Blank
+
+#### `FillInBlankSegment`
+
+Individual segment in a fill-in-blank question.
+```typescript
+interface FillInBlankSegment {
+  type: 'text' | 'blank';
+  content?: string;
+  id?: string;
+  correctAnswers?: string[];
+  caseSensitive?: boolean;
+  placeholder?: string;
+}
+```
+
+**Properties:**
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | `'text'` \| `'blank'` | Yes | Type of segment |
+| `content` | `string` | No | Text content (for `type: 'text'`) |
+| `id` | `string` | No | Unique ID (for `type: 'blank'`) |
+| `correctAnswers` | `string[]` | No | Acceptable answers (for `type: 'blank'`) |
+| `caseSensitive` | `boolean` | No | Case-sensitive matching (for `type: 'blank'`) |
+| `placeholder` | `string` | No | Placeholder text (for `type: 'blank'`) |
+
+#### `FillInBlankConfig`
+
+Configuration for fill-in-blank questions.
+```typescript
+interface FillInBlankConfig extends BaseQuestionConfig {
+  type: 'fill-in-blank';
+  segments: FillInBlankSegment[];
+}
+```
+
+**Additional Properties:**
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `segments` | `FillInBlankSegment[]` | Yes | Array of text and blank segments |
+
+#### `FillInBlankAnswer`
+```typescript
+type FillInBlankAnswer = Record<string, string>;
+```
+
+Map of blank ID to answer string.
+
+#### Example
+```tsx
+import {
+  FillInBlankConfig,
+  FillInBlankAnswer,
+  FillInBlankSegment,
+} from '@scinforma/picolms';
+
+const fillInBlankConfig: FillInBlankConfig = {
+  id: 'fib-1',
+  type: 'fill-in-blank',
+  question: 'Complete the sentence',
+  points: 10,
+  segments: [
+    {
+      type: 'text',
+      content: 'The capital of France is ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['Paris', 'paris'],
+      caseSensitive: false,
+      placeholder: 'city name',
+    },
+    {
+      type: 'text',
+      content: ' and the capital of Germany is ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['Berlin', 'berlin'],
+      caseSensitive: false,
+      placeholder: 'city name',
+    },
+    {
+      type: 'text',
+      content: '.',
+    },
+  ],
+};
+
+const answer: FillInBlankAnswer = {
+  'blank-1': 'Paris',
+  'blank-2': 'Berlin',
+};
+
+// Render function
+function FillInBlankRenderer({ segments }: { segments: FillInBlankSegment[] }) {
+  return (
+    <div>
+      {segments.map((segment, index) => {
+        if (segment.type === 'text') {
+          return <span key={index}>{segment.content}</span>;
+        }
+        
+        return (
+          <input
+            key={segment.id}
+            type="text"
+            placeholder={segment.placeholder}
+            aria-label={`Blank ${index + 1}`}
+          />
+        );
+      })}
+    </div>
+  );
+}
+```
+
+---
+
+### Matching
+
+#### `MatchingPair`
+
+Individual matching pair.
+```typescript
+interface MatchingPair {
+  id: string;
+  left: string;
+  right: string;
+  leftMedia?: MediaAttachment;
+  rightMedia?: MediaAttachment;
+}
+```
+
+**Properties:**
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the pair |
+| `left` | `string` | Yes | Text for left column item |
+| `right` | `string` | Yes | Text for right column item (correct match) |
+| `leftMedia` | `MediaAttachment` | No | Media for left item |
+| `rightMedia` | `MediaAttachment` | No | Media for right item |
+
+#### `MatchingConfig`
+
+Configuration for matching questions.
+```typescript
+interface MatchingConfig extends BaseQuestionConfig {
+  type: 'matching';
+  pairs: MatchingPair[];
+  randomizeLeft?: boolean;
+  randomizeRight?: boolean;
+}
+```
+
+**Additional Properties:**
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `pairs` | `MatchingPair[]` | Yes | - | Array of matching pairs |
+| `randomizeLeft` | `boolean` | No | `false` | Randomize left column order |
+| `randomizeRight` | `boolean` | No | `true` | Randomize right column order |
+
+#### `MatchingAnswer`
+```typescript
+type MatchingAnswer = Record<string, string>;
+```
+
+Map of left item ID to right item ID.
+
+#### Example
+```tsx
+import { MatchingConfig, MatchingAnswer, MatchingPair } from '@scinforma/picolms';
+
+const matchingConfig: MatchingConfig = {
+  id: 'match-1',
+  type: 'matching',
+  question: 'Match each country with its capital',
+  points: 15,
+  pairs: [
+    { id: 'pair-1', left: 'France', right: 'Paris' },
+    { id: 'pair-2', left: 'Germany', right: 'Berlin' },
+    { id: 'pair-3', left: 'Italy', right: 'Rome' },
+    { id: 'pair-4', left: 'Spain', right: 'Madrid' },
+    { id: 'pair-5', left: 'Portugal', right: 'Lisbon' },
+  ],
+  randomizeLeft: false,
+  randomizeRight: true,
+};
+
+const answer: MatchingAnswer = {
+  'pair-1': 'pair-1', // France -> Paris
+  'pair-2': 'pair-2', // Germany -> Berlin
+  'pair-3': 'pair-3', // Italy -> Rome
+  'pair-4': 'pair-4', // Spain -> Madrid
+  'pair-5': 'pair-5', // Portugal -> Lisbon
+};
+
+// With media
+const matchingWithMedia: MatchingConfig = {
+  id: 'match-2',
+  type: 'matching',
+  question: 'Match each flag with its country',
+  points: 20,
+  pairs: [
+    {
+      id: 'pair-1',
+      left: 'Flag A',
+      right: 'France',
+      leftMedia: {
+        id: 'flag-fr',
+        type: 'image',
+        url: '/flags/france.png',
+        alt: 'French flag',
+      },
+    },
+    {
+      id: 'pair-2',
+      left: 'Flag B',
+      right: 'Germany',
+      leftMedia: {
+        id: 'flag-de',
+        type: 'image',
+        url: '/flags/germany.png',
+        alt: 'German flag',
+      },
+    },
+  ],
+  randomizeRight: true,
+};
+```
+
+---
+
+## Union Types
+
+### `QuestionConfig`
+
+Union type of all question configuration types.
+```typescript
+type QuestionConfig =
+  | MultipleChoiceConfig
+  | TrueOrFalseConfig
+  | ShortAnswerConfig
+  | EssayConfig
+  | FillInBlankConfig
+  | MatchingConfig;
+```
+
+#### Example
+```tsx
+import { QuestionConfig } from '@scinforma/picolms';
+
+// Type guard functions
+function isMultipleChoice(
+  config: QuestionConfig
+): config is MultipleChoiceConfig {
+  return config.type === 'multiple-choice';
+}
+
+function isEssay(config: QuestionConfig): config is EssayConfig {
+  return config.type === 'essay';
+}
+
+// Usage
+function renderQuestion(config: QuestionConfig) {
+  if (isMultipleChoice(config)) {
+    // TypeScript knows config is MultipleChoiceConfig
+    return <MultipleChoiceQuestion options={config.options} />;
+  }
+  
+  if (isEssay(config)) {
+    // TypeScript knows config is EssayConfig
+    return <EssayQuestion minWords={config.minWords} />;
+  }
+  
+  // ... handle other types
+}
+
+// Generic component
+function Question({ config }: { config: QuestionConfig }) {
+  switch (config.type) {
+    case 'multiple-choice':
+      return <MultipleChoiceQuestion config={config} />;
+    case 'true-false':
+      return <TrueOrFalseQuestion config={config} />;
+    case 'short-answer':
+      return <ShortAnswerQuestion config={config} />;
+    case 'essay':
+      return <EssayQuestion config={config} />;
+    case 'fill-in-blank':
+      return <FillInBlankQuestion config={config} />;
+    case 'matching':
+      return <MatchingQuestion config={config} />;
+    default:
+      return <div>Unknown question type</div>;
+  }
+}
+```
+
+---
+
+## Submission and State
+
+### `QuestionSubmission`
+
+Complete submission record for a question.
+```typescript
+interface QuestionSubmission {
+  questionId: string;
+  answer: QuestionAnswer;
+  status: SubmissionStatus;
+  score?: number;
+  maxScore: number;
+  feedback?: Feedback[];
+  submittedAt?: string;
+  gradedAt?: string;
+  gradedBy?: string;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `questionId` | `string` | Yes | ID of the question |
+| `answer` | `QuestionAnswer` | Yes | The submitted answer |
+| `status` | `SubmissionStatus` | Yes | Current submission status |
+| `score` | `number` | No | Points earned |
+| `maxScore` | `number` | Yes | Maximum possible points |
+| `feedback` | `Feedback[]` | No | Array of feedback items |
+| `submittedAt` | `string` | No | ISO timestamp of submission |
+| `gradedAt` | `string` | No | ISO timestamp of grading |
+| `gradedBy` | `string` | No | ID of grader (instructor, auto-grader, etc.) |
+
+#### Example
+```tsx
+import { QuestionSubmission } from '@scinforma/picolms';
+
+const submission: QuestionSubmission = {
+  questionId: 'q1',
+  answer: {
+    questionId: 'q1',
+    value: 'Paris',
+    isAnswered: true,
+    attemptNumber: 1,
+    timeSpent: 30,
+    timestamp: '2024-12-29T10:30:00Z',
+  },
+  status: 'graded',
+  score: 10,
+  maxScore: 10,
+  feedback: [
+    {
+      type: 'correct',
+      message: 'Perfect answer!',
+      showAfter: 'grading',
+    },
+  ],
+  submittedAt: '2024-12-29T10:30:15Z',
+  gradedAt: '2024-12-29T10:32:00Z',
+  gradedBy: 'instructor-123',
+};
+
+// Calculate percentage
+const percentage = (submission.score! / submission.maxScore) * 100;
+
+// Display submission
+function SubmissionCard({ submission }: { submission: QuestionSubmission }) {
+  return (
+    <div className="submission-card">
+      <h4>Question {submission.questionId}</h4>
+      <p>Status: {submission.status}</p>
+      {submission.score !== undefined && (
+        <p>
+          Score: {submission.score} / {submission.maxScore} (
+          {((submission.score / submission.maxScore) * 100).toFixed(1)}%)
+        </p>
+      )}
+      {submission.feedback?.map((fb, i) => (
+        <div key={i} className={`feedback-${fb.type}`}>
+          {fb.message}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+### `QuestionState<T>`
+
+Internal component state for questions.
+```typescript
+interface QuestionState<T = any> {
+  config: QuestionConfig;
+  answer: QuestionAnswer<T>;
+  validation: {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+  };
+  status: SubmissionStatus;
+  timeSpent: number;
+  attemptNumber: number;
+  isLocked: boolean;
+}
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `config` | `QuestionConfig` | Question configuration |
+| `answer` | `QuestionAnswer<T>` | Current answer state |
+| `validation` | `object` | Validation state |
+| `validation.isValid` | `boolean` | Whether current answer is valid |
+| `validation.errors` | `string[]` | Validation error messages |
+| `validation.warnings` | `string[]` | Validation warning messages |
+| `status` | `SubmissionStatus` | Current submission status |
+| `timeSpent` | `number` | Time spent in seconds |
+| `attemptNumber` | `number` | Current attempt number |
+| `isLocked` | `boolean` | Whether question is locked (submitted/graded) |
+
+#### Example
+```tsx
+import { QuestionState } from '@scinforma/picolms';
+
+// Initial state
+const initialState: QuestionState<string> = {
+  config: shortAnswerConfig,
+  answer: {
+    questionId: 'q1',
+    value: '',
+    isAnswered: false,
+    attemptNumber: 1,
+    timeSpent: 0,
+  },
+  validation: {
+    isValid: false,
+    errors: ['Answer is required'],
+    warnings: [],
+  },
+  status: 'not-started',
+  timeSpent: 0,
+  attemptNumber: 1,
+  isLocked: false,
+};
+
+// After answering
+const answeredState: QuestionState<string> = {
+  ...initialState,
+  answer: {
+    questionId: 'q1',
+    value: 'Paris',
+    isAnswered: true,
+    attemptNumber: 1,
+    timeSpent: 45,
+    timestamp: '2024-12-29T10:30:00Z',
+  },
+  validation: {
+    isValid: true,
+    errors: [],
+    warnings: [],
+  },
+  status: 'in-progress',
+  timeSpent: 45,
+};
+
+// After submission
+const submittedState: QuestionState<string> = {
+  ...answeredState,
+  status: 'submitted',
+  isLocked: true,
+};
+```
+
+---
+
+## Complete Examples
+
+### Building a Quiz
+```tsx
+import {
+  QuestionConfig,
+  MultipleChoiceConfig,
+  TrueOrFalseConfig,
+  ShortAnswerConfig,
+} from '@scinforma/picolms';
+
+const quiz: QuestionConfig[] = [
+  // Multiple choice
+  {
+    id: 'q1',
+    type: 'multiple-choice',
+    question: 'What is the capital of France?',
+    points: 5,
+    options: [
+      { id: 'a', text: 'London', isCorrect: false },
+      { id: 'b', text: 'Paris', isCorrect: true },
+      { id: 'c', text: 'Berlin', isCorrect: false },
+      { id: 'd', text: 'Madrid', isCorrect: false },
+    ],
+    shuffleOptions: true,
+  },
+  
+  // True/False
+  {
+    id: 'q2',
+    type: 'true-false',
+    question: 'The Earth is flat.',
+    points: 2,
+    correctAnswer: false,
+    displayAs: 'buttons',
+  },
+  
+  // Short answer
+  {
+    id: 'q3',
+    type: 'short-answer',
+    question: 'What is the chemical symbol for gold?',
+    points: 3,
+    correctAnswers: ['Au', 'AU', 'au'],
+    caseSensitive: false,
+    maxLength: 10,
+  },
+];
+
+// Render quiz
+function Quiz({ questions }: { questions: QuestionConfig[] }) {
+  return (
+    <div className="quiz">
+      {questions.map((config, index) => (
+        <div key={config.id} className="question-container">
+          <h3>Question {index + 1}</h3>
+          <Question config={config} />
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+## TypeScript
+
+All types are fully typed and support discriminated unions:
+```tsx
+// Import types
+import type {
+  QuestionConfig,
+  QuestionAnswer,
+  MultipleChoiceConfig,
+} from '@scinforma/picolms';
+
+// Type guards
+function isMultipleChoice(
+  config: QuestionConfig
+): config is MultipleChoiceConfig {
+  return config.type === 'multiple-choice';
+}
+
+// Generic functions
+function createAnswer<T>(
+  questionId: string,
+  value: T
+): QuestionAnswer<T> {
+  return {
+    questionId,
+    value,
+    isAnswered: value != null,
+    attemptNumber: 1,
+    timeSpent: 0,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+// Usage
+const mcAnswer = createAnswer<string>('q1', 'option-a');
+const fibAnswer = createAnswer<Record<string, string>>('q2', {
+  'blank-1': 'answer',
+});
+```
+
+---
+
+## Best Practices
+
+1. **Always Provide IDs**: Ensure all questions and options have unique IDs
+2. **Set Points**: Always specify point values for questions
+3. **Use Validation**: Configure validation rules for better UX
+4. **Provide Feedback**: Include helpful feedback for both correct and incorrect answers
+5. **Consider Accessibility**: Configure accessibility settings for all questions
+6. **Type Your Answers**: Use TypeScript generics for type-safe answer handling
+7. **Handle Time Limits**: Set appropriate time limits for timed assessments
+8. **Test Validation**: Thoroughly test validation rules before deployment
+
+---
+
+## Related Documentation
+
+- **Common Types**: Base types and interfaces
+- **useQuestionState**: Hook for managing question state
+- **BaseQuestion**: Base question component
+- **Question Components**: Type-specific question components
+
+---
+
+## Notes
+
+- All timestamp fields should use ISO 8601 format
+- Question IDs must be unique within a quiz/assessment
+- Option IDs must be unique within a question
+- Validation runs according to `validateOnChange` and `validateOnBlur` settings
+- Time limits are enforced at the component level
+- Maximum attempts are tracked per question

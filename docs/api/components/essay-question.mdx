@@ -1,0 +1,944 @@
+---
+id: essay-component
+title: Essay Question
+sidebar_label: Essay
+sidebar_position: 3
+---
+
+# &lt;Essay/&gt;
+
+A React component for essay-style questions with rich text support, word/character counting, and length validation.
+
+## Overview
+
+The `Essay` component provides:
+
+- **Text Input**: Large textarea for extended responses
+- **Word/Character Counting**: Real-time tracking with min/max validation
+- **Length Constraints**: Configurable minimum and maximum limits
+- **Rich Text Support**: Optional rich text editor via custom renderer
+- **Validation**: Built-in validation with custom rules
+- **Accessibility**: Full ARIA support and keyboard navigation
+- **Media Support**: Attach images, videos, and documents
+- **Feedback System**: Hints, validation messages, and grading feedback
+
+## Import
+```tsx
+import { Essay } from '@scinforma/picolms';
+import type { EssayConfig, EssayAnswer } from '@scinforma/picolms';
+```
+
+## Basic Usage
+```tsx
+import { Essay } from '@scinforma/picolms';
+
+const essayConfig: EssayConfig = {
+  id: 'essay-1',
+  type: 'essay',
+  question: 'Discuss the impact of the Industrial Revolution on society.',
+  points: 50,
+  minWords: 300,
+  maxWords: 1000,
+  placeholder: 'Begin your essay here...',
+};
+
+function MyQuiz() {
+  return <Essay config={essayConfig} />;
+}
+```
+
+## Props
+
+### `EssayProps`
+```typescript
+interface EssayProps extends Omit<BaseQuestionProps<EssayAnswer>, 'config'> {
+  config: EssayConfig;
+  renderContent?: ContentRenderer;
+}
+```
+
+#### Configuration Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `config` | `EssayConfig` | Yes | Essay question configuration |
+| `renderContent` | `ContentRenderer` | No | Custom content renderer for Markdown/HTML |
+| `initialAnswer` | `EssayAnswer` | No | Initial answer value (string) |
+| `onAnswerChange` | `(answer: QuestionAnswer<EssayAnswer>) => void` | No | Callback when answer changes |
+| `onValidate` | `(result: ValidationResult) => void` | No | Callback when validation runs |
+| `autoSave` | `boolean` | No | Enable automatic saving |
+| `autoSaveDelay` | `number` | No | Auto-save delay in milliseconds |
+
+### `EssayConfig`
+
+**Key Properties:**
+```typescript
+interface EssayConfig extends BaseQuestionConfig {
+  type: 'essay';
+  minWords?: number;
+  maxWords?: number;
+  minCharacters?: number;
+  maxCharacters?: number;
+  placeholder?: string;
+  enableRichText?: boolean;
+}
+```
+
+### `EssayAnswer`
+```typescript
+type EssayAnswer = string;
+```
+
+The essay answer is a string containing the user's text response.
+
+## Examples
+
+### Basic Essay Question
+```tsx
+import { Essay } from '@scinforma/picolms';
+
+const basicConfig: EssayConfig = {
+  id: 'essay-basic',
+  type: 'essay',
+  question: 'What is your favorite book and why?',
+  points: 20,
+  minWords: 100,
+  placeholder: 'Share your thoughts...',
+};
+
+function BasicEssay() {
+  return <Essay config={basicConfig} />;
+}
+```
+
+### With Word and Character Limits
+```tsx
+const limitedConfig: EssayConfig = {
+  id: 'essay-limited',
+  type: 'essay',
+  question: 'Explain the concept of photosynthesis.',
+  instructions: 'Be concise but thorough in your explanation.',
+  points: 30,
+  minWords: 150,
+  maxWords: 500,
+  minCharacters: 750,
+  maxCharacters: 2500,
+  placeholder: 'Type your explanation here...',
+};
+
+function LimitedEssay() {
+  return <Essay config={limitedConfig} />;
+}
+```
+
+### With Media Attachments
+```tsx
+const withMediaConfig: EssayConfig = {
+  id: 'essay-media',
+  type: 'essay',
+  question: 'Analyze the photograph below and discuss its historical significance.',
+  points: 40,
+  minWords: 300,
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/historical-photo.jpg',
+      alt: 'Historical photograph from 1945',
+      caption: 'Figure 1: Historical moment captured on film',
+    },
+  ],
+};
+
+function EssayWithMedia() {
+  return <Essay config={withMediaConfig} />;
+}
+```
+
+### With Custom Content Renderer (Markdown)
+```tsx
+import { Essay } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content, context) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const markdownConfig: EssayConfig = {
+  id: 'essay-markdown',
+  type: 'essay',
+  question: `
+# Essay Question
+
+Discuss the following topics:
+
+1. **Economic Impact**: How did the event affect the economy?
+2. **Social Changes**: What societal shifts occurred?
+3. **Long-term Effects**: What are the lasting consequences?
+
+Use specific examples to support your arguments.
+  `,
+  points: 50,
+  minWords: 400,
+};
+
+function MarkdownEssay() {
+  return (
+    <Essay 
+      config={markdownConfig} 
+      renderContent={markdownRenderer}
+    />
+  );
+}
+```
+
+### With Validation
+```tsx
+const validatedConfig: EssayConfig = {
+  id: 'essay-validated',
+  type: 'essay',
+  question: 'Describe Newton\'s laws of motion.',
+  points: 30,
+  minWords: 200,
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Answer is required',
+      },
+      {
+        type: 'minLength',
+        value: 1000,
+        message: 'Answer must be at least 1000 characters',
+      },
+      {
+        type: 'custom',
+        message: 'Your answer must mention all three laws',
+        validate: (value: string) => {
+          const text = value.toLowerCase();
+          return (
+            text.includes('first law') &&
+            text.includes('second law') &&
+            text.includes('third law')
+          );
+        },
+      },
+    ],
+    validateOnBlur: true,
+  },
+};
+
+function ValidatedEssay() {
+  return <Essay config={validatedConfig} />;
+}
+```
+
+### With Hints and Feedback
+```tsx
+const withHintsConfig: EssayConfig = {
+  id: 'essay-hints',
+  type: 'essay',
+  question: 'Explain the water cycle and its importance to Earth\'s ecosystems.',
+  instructions: 'Include all major stages and their significance.',
+  points: 35,
+  minWords: 250,
+  feedback: {
+    hints: [
+      'Consider the stages: evaporation, condensation, precipitation, and collection.',
+      'Think about how water moves between the atmosphere, land, and oceans.',
+      'Don\'t forget to explain why this cycle is crucial for life on Earth.',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Excellent essay! You covered all key points thoroughly.',
+      showAfter: 'grading',
+    },
+    partial: {
+      type: 'partial',
+      message: 'Good effort. Consider expanding on the ecological importance.',
+      showAfter: 'grading',
+    },
+  },
+};
+
+function EssayWithHints() {
+  return <Essay config={withHintsConfig} />;
+}
+```
+
+### With Time Limit
+```tsx
+const timedConfig: EssayConfig = {
+  id: 'essay-timed',
+  type: 'essay',
+  question: 'Write a response to the prompt within the time limit.',
+  points: 40,
+  minWords: 300,
+  maxWords: 600,
+  timeLimit: 1800, // 30 minutes in seconds
+};
+
+function TimedEssay() {
+  return <Essay config={timedConfig} />;
+}
+```
+
+### With Answer Change Callback
+```tsx
+import { useState } from 'react';
+import { Essay } from '@scinforma/picolms';
+import type { QuestionAnswer } from '@scinforma/picolms';
+
+function EssayWithCallback() {
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  const handleAnswerChange = (answer: QuestionAnswer<string>) => {
+    console.log('Answer changed:', answer.value);
+    console.log('Word count:', answer.value.split(/\s+/).filter(Boolean).length);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Save to backend
+    saveToBackend(answer).then(() => {
+      setLastSaved(new Date());
+    });
+  };
+
+  return (
+    <div>
+      <Essay 
+        config={essayConfig} 
+        onAnswerChange={handleAnswerChange}
+      />
+      {lastSaved && (
+        <p className="text-sm text-gray-500">
+          Last saved: {lastSaved.toLocaleTimeString()}
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+### With Auto-Save
+```tsx
+const autoSaveConfig: EssayConfig = {
+  id: 'essay-autosave',
+  type: 'essay',
+  question: 'Write your essay response.',
+  points: 50,
+  minWords: 500,
+};
+
+function AutoSaveEssay() {
+  const handleAnswerChange = async (answer: QuestionAnswer<string>) => {
+    // This will be called after the auto-save delay
+    await fetch('/api/save-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(answer),
+    });
+  };
+
+  return (
+    <Essay 
+      config={autoSaveConfig}
+      autoSave={true}
+      autoSaveDelay={3000} // Save 3 seconds after typing stops
+      onAnswerChange={handleAnswerChange}
+    />
+  );
+}
+```
+
+### Controlled Component
+```tsx
+import { useState } from 'react';
+
+function ControlledEssay() {
+  const [essayAnswer, setEssayAnswer] = useState('');
+
+  const handleChange = (answer: QuestionAnswer<string>) => {
+    setEssayAnswer(answer.value);
+  };
+
+  const handleReset = () => {
+    setEssayAnswer('');
+  };
+
+  return (
+    <div>
+      <Essay 
+        config={essayConfig}
+        initialAnswer={essayAnswer}
+        onAnswerChange={handleChange}
+      />
+      <button onClick={handleReset}>Reset Essay</button>
+      <div className="preview">
+        <h4>Preview:</h4>
+        <p>{essayAnswer}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+### With Accessibility Configuration
+```tsx
+const accessibleConfig: EssayConfig = {
+  id: 'essay-a11y',
+  type: 'essay',
+  question: 'Describe your experience with accessible web design.',
+  points: 30,
+  minWords: 200,
+  accessibility: {
+    ariaLabel: 'Essay question about accessible web design',
+    ariaDescribedBy: 'essay-instructions',
+    screenReaderText: 'Type your essay response in the text area below. Word and character counts will be announced as you type.',
+    keyboardShortcuts: {
+      'Ctrl+Enter': 'Submit essay',
+      'Ctrl+S': 'Save draft',
+    },
+  },
+};
+
+function AccessibleEssay() {
+  return <Essay config={accessibleConfig} />;
+}
+```
+
+### Complete Example with All Features
+```tsx
+import { Essay } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer, QuestionAnswer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const completeConfig: EssayConfig = {
+  id: 'essay-complete',
+  type: 'essay',
+  title: 'Historical Analysis Essay',
+  question: `
+# The Industrial Revolution
+
+Analyze the impact of the Industrial Revolution on 19th-century society.
+
+Consider the following aspects:
+- Economic changes
+- Social transformation
+- Technological advancement
+- Environmental impact
+  `,
+  instructions: 'Write a well-structured essay with clear arguments and supporting evidence.',
+  points: 100,
+  required: true,
+  difficulty: 'advanced',
+  tags: ['history', 'industrial-revolution', 'essay'],
+  category: 'World History',
+  
+  // Length constraints
+  minWords: 500,
+  maxWords: 1500,
+  minCharacters: 2500,
+  maxCharacters: 7500,
+  
+  // Time limit: 1 hour
+  timeLimit: 3600,
+  
+  // Attempts
+  maxAttempts: 2,
+  
+  // Media
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/industrial-revolution.jpg',
+      alt: 'Factory during the Industrial Revolution',
+      caption: 'Figure 1: A textile factory in 19th-century England',
+    },
+  ],
+  
+  // Validation
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Essay is required',
+      },
+      {
+        type: 'minLength',
+        value: 2500,
+        message: 'Essay must be at least 2500 characters',
+      },
+      {
+        type: 'custom',
+        message: 'Essay must address economic, social, and technological aspects',
+        validate: (value: string) => {
+          const text = value.toLowerCase();
+          return (
+            text.includes('economic') &&
+            text.includes('social') &&
+            text.includes('technolog')
+          );
+        },
+      },
+    ],
+    validateOnBlur: true,
+  },
+  
+  // Feedback
+  feedback: {
+    hints: [
+      'Start by outlining the major changes in each area.',
+      'Use specific examples from history to support your points.',
+      'Consider both positive and negative impacts.',
+      'Conclude by summarizing the overall significance.',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Outstanding essay! Your analysis is thorough and well-supported.',
+      showAfter: 'grading',
+    },
+    partial: {
+      type: 'partial',
+      message: 'Good work, but consider expanding on the environmental impact.',
+      showAfter: 'grading',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Your essay needs more depth. Review the rubric and try again.',
+      showAfter: 'grading',
+    },
+  },
+  
+  // Accessibility
+  accessibility: {
+    ariaLabel: 'Historical analysis essay question',
+    ariaDescribedBy: 'essay-instructions',
+    screenReaderText: 'Type your essay in the text area. Monitor word and character counts as you write.',
+    keyboardShortcuts: {
+      'Ctrl+Enter': 'Submit essay',
+      'Ctrl+S': 'Save draft',
+      'Ctrl+H': 'Show hints',
+    },
+  },
+  
+  // Metadata
+  metadata: {
+    createdAt: '2024-01-15T10:00:00Z',
+    createdBy: 'instructor-123',
+    tags: ['history', 'analysis', 'writing'],
+    subject: 'World History',
+    gradeLevel: '11-12',
+  },
+  
+  placeholder: 'Begin your essay here. Remember to address all aspects mentioned in the question.',
+};
+
+function CompleteEssay() {
+  const handleAnswerChange = async (answer: QuestionAnswer<string>) => {
+    console.log('Words:', countWords(answer.value));
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Auto-save
+    await saveToBackend(answer);
+  };
+
+  const handleValidate = (result: ValidationResult) => {
+    if (!result.isValid) {
+      console.log('Validation errors:', result.errors);
+    }
+  };
+
+  return (
+    <Essay
+      config={completeConfig}
+      renderContent={markdownRenderer}
+      onAnswerChange={handleAnswerChange}
+      onValidate={handleValidate}
+      autoSave={true}
+      autoSaveDelay={2000}
+    />
+  );
+}
+
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+```
+
+## Features
+
+### Word and Character Counting
+
+The component automatically tracks and displays:
+
+- **Word Count**: Real-time word counting with min/max indicators
+- **Character Count**: Real-time character counting with min/max indicators
+- **Visual Warnings**: Highlights when counts are outside the specified range
+- **Progress Indicators**: Shows how close the answer is to meeting requirements
+```tsx
+// Displays: Words: 342 (300-1000)
+// Displays: Characters: 1,842 (1500-5000)
+```
+
+### Length Validation
+
+The component validates essay length and provides warnings:
+```tsx
+const config: EssayConfig = {
+  id: 'essay-1',
+  type: 'essay',
+  question: 'Write your essay',
+  points: 50,
+  minWords: 300,
+  maxWords: 1000,
+  minCharacters: 1500,
+  maxCharacters: 5000,
+};
+
+// Shows warnings like:
+// "Your essay needs at least 42 more words."
+// "Your essay exceeds the maximum by 15 words."
+```
+
+### Placeholder Text
+
+Customize the placeholder text:
+```tsx
+const config: EssayConfig = {
+  id: 'essay-1',
+  type: 'essay',
+  question: 'Write your essay',
+  points: 50,
+  placeholder: 'Begin your response here. Remember to structure your essay with an introduction, body paragraphs, and a conclusion.',
+};
+```
+
+### Character Limit Enforcement
+
+Hard limit on maximum characters (prevents typing beyond limit):
+```tsx
+const config: EssayConfig = {
+  id: 'essay-1',
+  type: 'essay',
+  question: 'Write a brief summary',
+  points: 20,
+  maxCharacters: 500, // Users cannot type beyond 500 characters
+};
+```
+
+### Validation on Blur
+
+Validation can be triggered when the textarea loses focus:
+```tsx
+const config: EssayConfig = {
+  id: 'essay-1',
+  type: 'essay',
+  question: 'Write your answer',
+  points: 30,
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Answer is required',
+      },
+    ],
+    validateOnBlur: true, // Validate when user clicks away
+  },
+};
+```
+
+## Styling
+
+### CSS Classes
+
+The component uses the following CSS classes:
+```css
+/* Container */
+.picolms-essay-question { }
+
+/* Header */
+.picolms-question-header { }
+.picolms-question-title { }
+.picolms-question-text { }
+.picolms-question-instructions { }
+
+/* Media */
+.picolms-question-media { }
+.picolms-media-item { }
+.picolms-media-caption { }
+
+/* Input */
+.picolms-essay-input-container { }
+.picolms-essay-textarea { }
+.essay-textarea-error { } /* Error state */
+
+/* Counters */
+.picolms-essay-counters { }
+.picolms-essay-word-count { }
+.picolms-essay-char-count { }
+.count-label { }
+.count-value { }
+.count-warning { } /* When outside limits */
+
+/* Warnings */
+.picolms-essay-length-warnings { }
+.picolms-warning-message { }
+
+/* Validation */
+.picolms-question-errors { }
+.picolms-error-message { }
+
+/* Feedback */
+.picolms-question-feedback { }
+.feedback-correct { }
+.feedback-incorrect { }
+.feedback-partial { }
+
+/* Hints */
+.picolms-question-hints { }
+.picolms-hint-text { }
+
+/* Metadata */
+.picolms-question-meta { }
+.picolms-question-points { }
+.picolms-question-difficulty { }
+```
+
+### Example Styles
+```css
+.picolms-essay-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.picolms-essay-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.essay-textarea-error {
+  border-color: #ef4444;
+}
+
+.picolms-essay-counters {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.count-warning {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.picolms-essay-length-warnings {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 0.25rem;
+}
+
+.picolms-warning-message {
+  margin: 0.25rem 0;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+```
+
+## Accessibility
+
+The Essay component includes comprehensive accessibility features:
+
+### ARIA Attributes
+```tsx
+<textarea
+  aria-label="Your essay answer"
+  aria-invalid={hasErrors}
+  aria-describedby="error-essay-1"
+  role="textbox"
+/>
+```
+
+### Keyboard Navigation
+
+- **Tab**: Navigate to/from textarea
+- **Shift+Tab**: Navigate backwards
+- **Ctrl+Enter**: Submit (if configured in shortcuts)
+- **Ctrl+S**: Save draft (if configured in shortcuts)
+
+### Screen Reader Support
+
+- Error messages are announced via `role="alert"`
+- Validation feedback uses `role="status"`
+- Character count updates are announced
+- Hints are properly labeled
+
+## TypeScript
+
+Full TypeScript support with strict typing:
+```tsx
+import { Essay } from '@scinforma/picolms';
+import type {
+  EssayConfig,
+  EssayAnswer,
+  EssayProps,
+  QuestionAnswer,
+  ContentRenderer,
+} from '@scinforma/picolms';
+
+const config: EssayConfig = {
+  id: 'essay-1',
+  type: 'essay',
+  question: 'Write your essay',
+  points: 50,
+  minWords: 300,
+};
+
+const answer: EssayAnswer = 'My essay text...';
+
+const handleChange = (answer: QuestionAnswer<EssayAnswer>) => {
+  const text: string = answer.value;
+  console.log(text.length);
+};
+
+const props: EssayProps = {
+  config,
+  onAnswerChange: handleChange,
+};
+```
+
+## Best Practices
+
+1. **Set Appropriate Limits**: Use realistic word/character limits based on the question
+2. **Provide Clear Instructions**: Tell students what you expect in the essay
+3. **Use Hints**: Provide progressive hints to guide struggling students
+4. **Enable Auto-Save**: Prevent data loss with auto-save functionality
+5. **Consider Time Limits**: Set reasonable time limits for essay questions
+6. **Validate Thoughtfully**: Use validation to ensure quality, not to frustrate
+7. **Support Markdown**: Use a custom renderer for rich formatting
+8. **Test Accessibility**: Ensure the component works with screen readers
+9. **Provide Feedback**: Give meaningful feedback after grading
+10. **Monitor Progress**: Use character/word counts to gauge student progress
+
+## Common Patterns
+
+### Word Count Helper
+```tsx
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function useWordCount(text: string) {
+  return useMemo(() => countWords(text), [text]);
+}
+```
+
+### Character Count Helper
+```tsx
+function countCharacters(text: string): number {
+  return text.length;
+}
+
+function countCharactersExcludingSpaces(text: string): number {
+  return text.replace(/\s/g, '').length;
+}
+```
+
+### Draft Management
+```tsx
+function EssayWithDrafts() {
+  const [draft, setDraft] = useState('');
+
+  const saveDraft = async (text: string) => {
+    localStorage.setItem('essay-draft', text);
+    await fetch('/api/save-draft', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    });
+  };
+
+  const loadDraft = () => {
+    const saved = localStorage.getItem('essay-draft');
+    if (saved) setDraft(saved);
+  };
+
+  useEffect(() => {
+    loadDraft();
+  }, []);
+
+  return (
+    <Essay
+      config={config}
+      initialAnswer={draft}
+      onAnswerChange={(answer) => saveDraft(answer.value)}
+    />
+  );
+}
+```
+
+### Progress Tracking
+```tsx
+function EssayWithProgress() {
+  const [progress, setProgress] = useState(0);
+
+  const calculateProgress = (text: string, target: number) => {
+    const words = countWords(text);
+    return Math.min(100, (words / target) * 100);
+  };
+
+  const handleChange = (answer: QuestionAnswer<string>) => {
+    const prog = calculateProgress(answer.value, 300);
+    setProgress(prog);
+  };
+
+  return (
+    <div>
+      <div className="progress-bar">
+        <div style={{ width: `${progress}%` }} />
+      </div>
+      <Essay config={config} onAnswerChange={handleChange} />
+    </div>
+  );
+}
+```
+
+## Related Components
+
+- **BaseQuestion**: Base component for all questions
+- **ShortAnswer**: For brief text responses
+- **MultipleChoice**: For selection-based questions
+- **TrueOrFalse**: For binary questions
+
+## Related Hooks
+
+- **useQuestionState**: Manage question state
+- **useQuestionContext**: Access question context
+- **useValidation**: Custom validation logic
+
+## Notes
+
+- Word count splits by whitespace and filters empty strings
+- Character count includes all characters (including spaces)
+- Maximum character limit is enforced (users cannot type beyond it)
+- Minimum limits show warnings but don't prevent submission
+- Rich text support requires a custom renderer
+- Auto-save only triggers when the answer has content
+- Validation runs on blur by default if configured
+- Time tracking starts when the component mounts

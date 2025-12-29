@@ -1,0 +1,1121 @@
+---
+id: fill-in-blank-component
+title: Fill in the Blank Component
+sidebar_label: Fill in the Blank
+sidebar_position: 4
+---
+
+# &lt;FillInBlank/&gt;
+
+A React component for fill-in-the-blank style questions where users complete text by filling in missing words or phrases.
+
+## Overview
+
+The `FillInBlank` component provides:
+
+- **Text Segments**: Mix text and blank inputs seamlessly
+- **Multiple Blanks**: Support for multiple fill-in fields per question
+- **Auto-sizing Inputs**: Input fields adjust width based on content
+- **Case Sensitivity**: Configurable case-sensitive matching
+- **Multiple Correct Answers**: Accept various correct responses per blank
+- **Custom Placeholders**: Unique placeholder text for each blank
+- **Validation**: Built-in validation with custom rules
+- **Accessibility**: Full ARIA support and keyboard navigation
+- **Media Support**: Attach images, videos, and documents
+- **Feedback System**: Hints, validation messages, and grading feedback
+
+## Import
+```tsx
+import { FillInBlank } from '@scinforma/picolms';
+import type { FillInBlankConfig, FillInBlankAnswer } from '@scinforma/picolms';
+```
+
+## Basic Usage
+```tsx
+import { FillInBlank } from '@scinforma/picolms';
+
+const fillInBlankConfig: FillInBlankConfig = {
+  id: 'fib-1',
+  type: 'fill-in-blank',
+  question: 'Complete the sentence',
+  points: 10,
+  segments: [
+    { type: 'text', content: 'The capital of France is ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['Paris', 'paris'],
+      caseSensitive: false,
+    },
+    { type: 'text', content: '.' },
+  ],
+};
+
+function MyQuiz() {
+  return <FillInBlank config={fillInBlankConfig} />;
+}
+```
+
+## Props
+
+### `FillInBlankProps`
+```typescript
+interface FillInBlankProps extends Omit<BaseQuestionProps<FillInBlankAnswer>, 'config'> {
+  config: FillInBlankConfig;
+  renderContent?: ContentRenderer;
+}
+```
+
+#### Configuration Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `config` | `FillInBlankConfig` | Yes | Fill-in-blank question configuration |
+| `renderContent` | `ContentRenderer` | No | Custom content renderer for Markdown/HTML |
+| `initialAnswer` | `FillInBlankAnswer` | No | Initial answer value (object mapping blank IDs to strings) |
+| `onAnswerChange` | `(answer: QuestionAnswer<FillInBlankAnswer>) => void` | No | Callback when answer changes |
+| `onValidate` | `(result: ValidationResult) => void` | No | Callback when validation runs |
+| `autoSave` | `boolean` | No | Enable automatic saving |
+| `autoSaveDelay` | `number` | No | Auto-save delay in milliseconds |
+
+### `FillInBlankConfig`
+
+See the [Question Types documentation](./fill-in-blank.mdx) for complete `FillInBlankConfig` properties.
+
+**Key Properties:**
+```typescript
+interface FillInBlankConfig extends BaseQuestionConfig {
+  type: 'fill-in-blank';
+  segments: FillInBlankSegment[];
+}
+
+interface FillInBlankSegment {
+  type: 'text' | 'blank';
+  content?: string;           // For text segments
+  id?: string;                // For blank segments (required)
+  correctAnswers?: string[];  // For blank segments
+  caseSensitive?: boolean;    // For blank segments
+  placeholder?: string;       // For blank segments
+}
+```
+
+### `FillInBlankAnswer`
+```typescript
+type FillInBlankAnswer = Record<string, string>;
+```
+
+A map of blank IDs to answer strings.
+
+**Example:**
+```typescript
+const answer: FillInBlankAnswer = {
+  'blank-1': 'Paris',
+  'blank-2': 'Berlin',
+  'blank-3': 'Rome',
+};
+```
+
+## Examples
+
+### Basic Fill in the Blank
+```tsx
+import { FillInBlank } from '@scinforma/picolms';
+
+const basicConfig: FillInBlankConfig = {
+  id: 'fib-basic',
+  type: 'fill-in-blank',
+  question: 'Complete the sentence',
+  points: 5,
+  segments: [
+    { type: 'text', content: 'The ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['sun', 'Sun'],
+      placeholder: 'celestial body',
+    },
+    { type: 'text', content: ' rises in the ' },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['east', 'East'],
+      placeholder: 'direction',
+    },
+    { type: 'text', content: '.' },
+  ],
+};
+
+function BasicFillInBlank() {
+  return <FillInBlank config={basicConfig} />;
+}
+```
+
+### Multiple Blanks with Case Sensitivity
+```tsx
+const multipleBlanksConfig: FillInBlankConfig = {
+  id: 'fib-multiple',
+  type: 'fill-in-blank',
+  question: 'Fill in the chemical formulas',
+  instructions: 'Enter exact chemical formulas (case-sensitive)',
+  points: 15,
+  segments: [
+    { type: 'text', content: 'Water: ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['H2O', 'H₂O'],
+      caseSensitive: true,
+      placeholder: 'formula',
+    },
+    { type: 'text', content: ', Carbon dioxide: ' },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['CO2', 'CO₂'],
+      caseSensitive: true,
+      placeholder: 'formula',
+    },
+    { type: 'text', content: ', Oxygen: ' },
+    {
+      type: 'blank',
+      id: 'blank-3',
+      correctAnswers: ['O2', 'O₂'],
+      caseSensitive: true,
+      placeholder: 'formula',
+    },
+  ],
+};
+
+function MultipleBlanks() {
+  return <FillInBlank config={multipleBlanksConfig} />;
+}
+```
+
+### With Multiple Correct Answers
+```tsx
+const multipleAnswersConfig: FillInBlankConfig = {
+  id: 'fib-multiple-correct',
+  type: 'fill-in-blank',
+  question: 'Complete the sentence with appropriate words',
+  points: 10,
+  segments: [
+    { type: 'text', content: 'I am ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['happy', 'joyful', 'pleased', 'delighted', 'glad'],
+      caseSensitive: false,
+      placeholder: 'emotion',
+    },
+    { type: 'text', content: ' to see you today.' },
+  ],
+};
+
+function MultipleCorrectAnswers() {
+  return <FillInBlank config={multipleAnswersConfig} />;
+}
+```
+
+### With Custom Content Renderer (Markdown)
+```tsx
+import { FillInBlank } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content, context) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const markdownConfig: FillInBlankConfig = {
+  id: 'fib-markdown',
+  type: 'fill-in-blank',
+  question: 'Complete the **mathematical equation**',
+  instructions: 'Fill in the blanks to complete the _Pythagorean theorem_',
+  points: 10,
+  segments: [
+    { type: 'text', content: 'In a right triangle, **a² + b² = ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['c²', 'c^2', 'c squared'],
+      placeholder: 'answer',
+    },
+    { type: 'text', content: '**' },
+  ],
+};
+
+function MarkdownFillInBlank() {
+  return (
+    <FillInBlank 
+      config={markdownConfig} 
+      renderContent={markdownRenderer}
+    />
+  );
+}
+```
+
+### With Media
+```tsx
+const withMediaConfig: FillInBlankConfig = {
+  id: 'fib-media',
+  type: 'fill-in-blank',
+  question: 'Identify the labeled parts in the diagram',
+  points: 20,
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/cell-diagram.png',
+      alt: 'Diagram of a plant cell',
+      caption: 'Figure 1: Cross-section of a plant cell',
+    },
+  ],
+  segments: [
+    { type: 'text', content: 'Part A is the ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['nucleus'],
+      placeholder: 'organelle',
+    },
+    { type: 'text', content: ', Part B is the ' },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['mitochondria', 'mitochondrion'],
+      placeholder: 'organelle',
+    },
+    { type: 'text', content: ', and Part C is the ' },
+    {
+      type: 'blank',
+      id: 'blank-3',
+      correctAnswers: ['chloroplast'],
+      placeholder: 'organelle',
+    },
+    { type: 'text', content: '.' },
+  ],
+};
+
+function FillInBlankWithMedia() {
+  return <FillInBlank config={withMediaConfig} />;
+}
+```
+
+### With Validation
+```tsx
+const validatedConfig: FillInBlankConfig = {
+  id: 'fib-validated',
+  type: 'fill-in-blank',
+  question: 'Complete the sentence',
+  points: 10,
+  segments: [
+    { type: 'text', content: 'The answer is ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['42', 'forty-two'],
+      placeholder: 'number',
+    },
+    { type: 'text', content: '.' },
+  ],
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'All blanks must be filled',
+      },
+      {
+        type: 'custom',
+        message: 'Each answer must be at least 2 characters',
+        validate: (value: FillInBlankAnswer) => {
+          return Object.values(value).every(v => v && v.length >= 2);
+        },
+      },
+    ],
+    validateOnBlur: true,
+  },
+};
+
+function ValidatedFillInBlank() {
+  return <FillInBlank config={validatedConfig} />;
+}
+```
+
+### With Hints
+```tsx
+const withHintsConfig: FillInBlankConfig = {
+  id: 'fib-hints',
+  type: 'fill-in-blank',
+  question: 'Complete the physics equation',
+  points: 15,
+  segments: [
+    { type: 'text', content: 'Force = ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['mass', 'm'],
+      placeholder: '___',
+    },
+    { type: 'text', content: ' × ' },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['acceleration', 'a'],
+      placeholder: '___',
+    },
+  ],
+  feedback: {
+    hints: [
+      'Think about Newton\'s Second Law of Motion.',
+      'The formula is F = m × a',
+      'The first blank is a property of matter, the second is rate of velocity change.',
+    ],
+  },
+};
+
+function FillInBlankWithHints() {
+  return <FillInBlank config={withHintsConfig} />;
+}
+```
+
+### With Answer Change Callback
+```tsx
+import { useState } from 'react';
+import { FillInBlank } from '@scinforma/picolms';
+import type { QuestionAnswer, FillInBlankAnswer } from '@scinforma/picolms';
+
+function FillInBlankWithCallback() {
+  const [filledBlanks, setFilledBlanks] = useState(0);
+
+  const handleAnswerChange = (answer: QuestionAnswer<FillInBlankAnswer>) => {
+    const filled = Object.values(answer.value).filter(v => v && v.trim()).length;
+    setFilledBlanks(filled);
+    
+    console.log('Filled blanks:', filled);
+    console.log('Answer:', answer.value);
+    console.log('Time spent:', answer.timeSpent);
+  };
+
+  return (
+    <div>
+      <FillInBlank 
+        config={fillInBlankConfig} 
+        onAnswerChange={handleAnswerChange}
+      />
+      <p className="text-sm text-gray-600">
+        {filledBlanks} of 3 blanks filled
+      </p>
+    </div>
+  );
+}
+```
+
+### With Auto-Save
+```tsx
+const autoSaveConfig: FillInBlankConfig = {
+  id: 'fib-autosave',
+  type: 'fill-in-blank',
+  question: 'Complete the blanks',
+  points: 10,
+  segments: [
+    { type: 'text', content: 'The ' },
+    { type: 'blank', id: 'blank-1', correctAnswers: ['quick'] },
+    { type: 'text', content: ' brown ' },
+    { type: 'blank', id: 'blank-2', correctAnswers: ['fox'] },
+    { type: 'text', content: ' jumps over the lazy ' },
+    { type: 'blank', id: 'blank-3', correctAnswers: ['dog'] },
+    { type: 'text', content: '.' },
+  ],
+};
+
+function AutoSaveFillInBlank() {
+  const handleAnswerChange = async (answer: QuestionAnswer<FillInBlankAnswer>) => {
+    await fetch('/api/save-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(answer),
+    });
+  };
+
+  return (
+    <FillInBlank 
+      config={autoSaveConfig}
+      autoSave={true}
+      autoSaveDelay={2000}
+      onAnswerChange={handleAnswerChange}
+    />
+  );
+}
+```
+
+### Controlled Component
+```tsx
+import { useState } from 'react';
+
+function ControlledFillInBlank() {
+  const [answers, setAnswers] = useState<FillInBlankAnswer>({});
+
+  const handleChange = (answer: QuestionAnswer<FillInBlankAnswer>) => {
+    setAnswers(answer.value);
+  };
+
+  const handleReset = () => {
+    setAnswers({});
+  };
+
+  return (
+    <div>
+      <FillInBlank 
+        config={fillInBlankConfig}
+        initialAnswer={answers}
+        onAnswerChange={handleChange}
+      />
+      <button onClick={handleReset}>Reset All Blanks</button>
+      <div className="preview">
+        <h4>Current Answers:</h4>
+        <pre>{JSON.stringify(answers, null, 2)}</pre>
+      </div>
+    </div>
+  );
+}
+```
+
+### With Accessibility Configuration
+```tsx
+const accessibleConfig: FillInBlankConfig = {
+  id: 'fib-a11y',
+  type: 'fill-in-blank',
+  question: 'Complete the sentence about accessibility',
+  points: 10,
+  segments: [
+    { type: 'text', content: 'Web accessibility ensures that ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['everyone', 'all people', 'all users'],
+      placeholder: 'who',
+    },
+    { type: 'text', content: ' can use ' },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['websites', 'web content', 'the web'],
+      placeholder: 'what',
+    },
+    { type: 'text', content: '.' },
+  ],
+  accessibility: {
+    ariaLabel: 'Fill in the blank question about web accessibility',
+    screenReaderText: 'Fill in each blank with an appropriate word. Use Tab to move between blanks.',
+    keyboardShortcuts: {
+      'Tab': 'Move to next blank',
+      'Shift+Tab': 'Move to previous blank',
+    },
+  },
+};
+
+function AccessibleFillInBlank() {
+  return <FillInBlank config={accessibleConfig} />;
+}
+```
+
+### Long-Form Narrative
+```tsx
+const narrativeConfig: FillInBlankConfig = {
+  id: 'fib-narrative',
+  type: 'fill-in-blank',
+  question: 'Complete the historical narrative',
+  instructions: 'Fill in the blanks with appropriate historical terms',
+  points: 25,
+  segments: [
+    {
+      type: 'text',
+      content: 'In 1776, the ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['Declaration of Independence', 'declaration'],
+      placeholder: 'document',
+    },
+    {
+      type: 'text',
+      content: ' was signed by representatives of the ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['thirteen colonies', '13 colonies', 'colonies'],
+      placeholder: 'location',
+    },
+    {
+      type: 'text',
+      content: '. This document declared their independence from ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-3',
+      correctAnswers: ['Great Britain', 'Britain', 'England'],
+      placeholder: 'country',
+    },
+    {
+      type: 'text',
+      content: '. The primary author was ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-4',
+      correctAnswers: ['Thomas Jefferson', 'Jefferson'],
+      placeholder: 'person',
+    },
+    {
+      type: 'text',
+      content: ', who became the third ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-5',
+      correctAnswers: ['President', 'president'],
+      caseSensitive: false,
+      placeholder: 'position',
+    },
+    {
+      type: 'text',
+      content: ' of the United States.',
+    },
+  ],
+};
+
+function NarrativeFillInBlank() {
+  return <FillInBlank config={narrativeConfig} />;
+}
+```
+
+### Complete Example
+```tsx
+import { FillInBlank } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer, QuestionAnswer, FillInBlankAnswer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const completeConfig: FillInBlankConfig = {
+  id: 'fib-complete',
+  type: 'fill-in-blank',
+  title: 'Newton\'s Laws of Motion',
+  question: 'Complete the statements about **Newton\'s Laws**',
+  instructions: 'Fill in the blanks with the correct scientific terms.',
+  points: 30,
+  required: true,
+  difficulty: 'intermediate',
+  tags: ['physics', 'mechanics', 'newton'],
+  category: 'Classical Physics',
+  
+  // Time limit: 5 minutes
+  timeLimit: 300,
+  
+  // Segments
+  segments: [
+    {
+      type: 'text',
+      content: '**First Law**: An object at rest stays at rest, and an object in motion stays in motion unless acted upon by a ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['force', 'net force', 'external force'],
+      caseSensitive: false,
+      placeholder: 'physical concept',
+    },
+    {
+      type: 'text',
+      content: '. **Second Law**: Force equals ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-2',
+      correctAnswers: ['mass', 'm'],
+      caseSensitive: false,
+      placeholder: 'quantity',
+    },
+    {
+      type: 'text',
+      content: ' times ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-3',
+      correctAnswers: ['acceleration', 'a'],
+      caseSensitive: false,
+      placeholder: 'quantity',
+    },
+    {
+      type: 'text',
+      content: '. **Third Law**: For every action, there is an equal and opposite ',
+    },
+    {
+      type: 'blank',
+      id: 'blank-4',
+      correctAnswers: ['reaction', 'force'],
+      caseSensitive: false,
+      placeholder: 'response',
+    },
+    {
+      type: 'text',
+      content: '.',
+    },
+  ],
+  
+  // Media
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/newton-laws.png',
+      alt: 'Diagram illustrating Newton\'s three laws',
+      caption: 'Figure 1: Visual representation of Newton\'s Laws',
+    },
+  ],
+  
+  // Validation
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'All blanks must be filled',
+      },
+      {
+        type: 'custom',
+        message: 'Each answer must be at least 2 characters',
+        validate: (value: FillInBlankAnswer) => {
+          return Object.values(value).every(v => v && v.trim().length >= 2);
+        },
+      },
+    ],
+    validateOnBlur: true,
+  },
+  
+  // Feedback
+  feedback: {
+    hints: [
+      'The first law is about inertia.',
+      'The second law is expressed as F = ma.',
+      'The third law involves action and reaction pairs.',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Perfect! You know Newton\'s Laws well.',
+      showAfter: 'submission',
+    },
+    partial: {
+      type: 'partial',
+      message: 'Good attempt! Review the laws you missed.',
+      showAfter: 'submission',
+    },
+  },
+  
+  // Accessibility
+  accessibility: {
+    ariaLabel: 'Fill in the blank question about Newton\'s Laws of Motion',
+    screenReaderText: 'Fill in each blank with the appropriate physics term. There are 4 blanks to complete.',
+    keyboardShortcuts: {
+      'Tab': 'Move to next blank',
+      'Shift+Tab': 'Move to previous blank',
+      'H': 'Show hints',
+    },
+  },
+  
+  // Metadata
+  metadata: {
+    createdAt: '2024-01-15T10:00:00Z',
+    createdBy: 'instructor-123',
+    tags: ['physics', 'classical-mechanics', 'laws-of-motion'],
+    subject: 'Physics',
+    gradeLevel: '9-10',
+  },
+};
+
+function CompleteFillInBlank() {
+  const handleAnswerChange = async (answer: QuestionAnswer<FillInBlankAnswer>) => {
+    const filledCount = Object.keys(answer.value).length;
+    console.log(`Filled ${filledCount} of 4 blanks`);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Auto-save
+    await saveToBackend(answer);
+  };
+
+  const handleValidate = (result: ValidationResult) => {
+    if (!result.isValid) {
+      console.log('Validation errors:', result.errors);
+    }
+  };
+
+  return (
+    <FillInBlank
+      config={completeConfig}
+      renderContent={markdownRenderer}
+      onAnswerChange={handleAnswerChange}
+      onValidate={handleValidate}
+      autoSave={true}
+      autoSaveDelay={2000}
+    />
+  );
+}
+```
+
+## Features
+
+### Auto-Sizing Input Fields
+
+Input fields automatically adjust their width based on content:
+```tsx
+// Input grows as user types
+size={Math.max(10, value.length + 2)}
+```
+
+### Case Sensitivity
+
+Control whether answers must match case exactly:
+```tsx
+const segment: FillInBlankSegment = {
+  type: 'blank',
+  id: 'blank-1',
+  correctAnswers: ['DNA', 'dna'],
+  caseSensitive: false, // Accepts both 'DNA' and 'dna'
+};
+```
+
+### Multiple Correct Answers
+
+Accept various correct responses:
+```tsx
+const segment: FillInBlankSegment = {
+  type: 'blank',
+  id: 'blank-1',
+  correctAnswers: [
+    'happy',
+    'joyful',
+    'pleased',
+    'delighted',
+    'glad',
+    'content',
+  ],
+};
+```
+
+### Custom Placeholders
+
+Provide contextual hints via placeholders:
+```tsx
+const segment: FillInBlankSegment = {
+  type: 'blank',
+  id: 'blank-1',
+  placeholder: 'type of organelle',
+};
+```
+
+### Text Formatting
+
+Use the content renderer for rich text in text segments:
+```tsx
+const segments = [
+  { type: 'text', content: '**Bold text** and _italic text_' },
+  { type: 'blank', id: 'blank-1', correctAnswers: ['answer'] },
+];
+```
+
+## Styling
+
+### CSS Classes
+
+The component uses the following CSS classes:
+```css
+/* Container */
+.picolms-fill-in-blank-question { }
+
+/* Header */
+.picolms-question-header { }
+.picolms-question-title { }
+.picolms-question-instructions { }
+
+/* Media */
+.picolms-question-media { }
+.picolms-media-item { }
+.picolms-media-caption { }
+
+/* Content */
+.picolms-fib-content { }
+.picolms-fib-text { }
+.picolms-fib-blank { }
+
+/* Validation */
+.picolms-question-errors { }
+.picolms-error-message { }
+
+/* Feedback */
+.picolms-question-feedback { }
+.feedback-correct { }
+.feedback-incorrect { }
+.feedback-partial { }
+
+/* Hints */
+.picolms-question-hints { }
+.picolms-hint-text { }
+
+/* Metadata */
+.picolms-question-meta { }
+.picolms-question-points { }
+.picolms-question-difficulty { }
+```
+
+### Example Styles
+```css
+.picolms-fib-content {
+  line-height: 2;
+  font-size: 1.125rem;
+}
+
+.picolms-fib-text {
+  vertical-align: middle;
+}
+
+.picolms-fib-blank {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  margin: 0 0.25rem;
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  border-bottom: 2px solid #3b82f6;
+  background-color: transparent;
+  transition: border-color 0.2s;
+  min-width: 100px;
+}
+
+.picolms-fib-blank:focus {
+  outline: none;
+  border-bottom-color: #1d4ed8;
+  background-color: #eff6ff;
+}
+
+.picolms-fib-blank:disabled {
+  border-bottom-color: #d1d5db;
+  background-color: #f9fafb;
+  cursor: not-allowed;
+}
+
+.picolms-fib-blank::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+```
+
+## Accessibility
+
+The FillInBlank component includes comprehensive accessibility features:
+
+### ARIA Attributes
+```tsx
+<input
+  aria-label="Blank 1"
+  role="textbox"
+/>
+```
+
+### Keyboard Navigation
+
+- **Tab**: Move to next blank
+- **Shift+Tab**: Move to previous blank
+- **Arrow Keys**: Move cursor within input
+- **Enter**: Move to next blank (custom behavior)
+
+### Screen Reader Support
+
+- Each blank is labeled with its position
+- Error messages are announced via `role="alert"`
+- Validation feedback uses `role="status"`
+
+## TypeScript
+
+Full TypeScript support with strict typing:
+```tsx
+import { FillInBlank } from '@scinforma/picolms';
+import type {
+  FillInBlankConfig,
+  FillInBlankAnswer,
+  FillInBlankSegment,
+  FillInBlankProps,
+  QuestionAnswer,
+  ContentRenderer,
+} from '@scinforma/picolms';
+
+const config: FillInBlankConfig = {
+  id: 'fib-1',
+  type: 'fill-in-blank',
+  question: 'Complete the sentence',
+  points: 10,
+  segments: [
+    { type: 'text', content: 'The answer is ' },
+    {
+      type: 'blank',
+      id: 'blank-1',
+      correctAnswers: ['42'],
+    },
+  ],
+};
+
+const answer: FillInBlankAnswer = {
+  'blank-1': '42',
+};
+
+const handleChange = (answer: QuestionAnswer<FillInBlankAnswer>) => {
+  const blankAnswers: Record<string, string> = answer.value;
+  console.log(blankAnswers['blank-1']);
+};
+
+const props: FillInBlankProps = {
+  config,
+  onAnswerChange: handleChange,
+};
+```
+
+## Best Practices
+
+1. **Provide Clear Context**: Ensure text segments provide enough context for blanks
+2. **Use Descriptive Placeholders**: Help users understand what type of answer is expected
+3. **Accept Variations**: Include multiple correct answers for flexibility
+4. **Consider Case Sensitivity**: Use case-insensitive matching when appropriate
+5. **Order Logically**: Arrange segments in a natural reading order
+6. **Limit Blanks**: Don't overuse blanks—maintain readability
+7. **Test Thoroughly**: Test all accepted answers to ensure they're correct
+8. **Provide Hints**: Help struggling students with progressive hints
+9. **Auto-size Inputs**: Let inputs grow with content for better UX
+10. **Validate Early**: Show validation feedback as users complete blanks
+
+## Common Patterns
+
+### Progress Tracking
+```tsx
+function FillInBlankWithProgress() {
+  const [progress, setProgress] = useState(0);
+
+  const handleChange = (answer: QuestionAnswer<FillInBlankAnswer>) => {
+    const totalBlanks = 5;
+    const filledBlanks = Object.values(answer.value).filter(v => v && v.trim()).length;
+    setProgress((filledBlanks / totalBlanks) * 100);
+  };
+
+  return (
+    <div>
+      <div className="progress-bar">
+        <div style={{ width: `${progress}%` }} />
+      </div>
+      <FillInBlank config={config} onAnswerChange={handleChange} />
+    </div>
+  );
+}
+```
+
+### Answer Validation Helper
+```tsx
+function validateFillInBlankAnswer(
+  answer: FillInBlankAnswer,
+  config: FillInBlankConfig
+): boolean {
+  const blanks = config.segments.filter(s => s.type === 'blank');
+  
+  return blanks.every(blank => {
+    const userAnswer = answer[blank.id!];
+    if (!userAnswer) return false;
+    
+    const correctAnswers = blank.correctAnswers || [];
+    const compare = blank.caseSensitive
+      ? (a: string, b: string) => a === b
+      : (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+    
+    return correctAnswers.some(correct => compare(userAnswer, correct));
+  });
+}
+```
+
+### Auto-Complete Suggestions
+```tsx
+function FillInBlankWithSuggestions() {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  const handleBlankFocus = (blankId: string, config: FillInBlankConfig) => {
+    const segment = config.segments.find(
+      s => s.type === 'blank' && s.id === blankId
+    );
+    
+    if (segment && segment.type === 'blank') {
+      setSuggestions(segment.correctAnswers || []);
+    }
+  };
+
+  return (
+    <div>
+      <FillInBlank config={config} />
+      {suggestions.length > 0 && (
+        <div className="suggestions">
+          {suggestions.map(s => (
+            <button key={s}>{s}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Blank Counter
+```tsx
+function countBlanks(config: FillInBlankConfig): number {
+  return config.segments.filter(s => s.type === 'blank').length;
+}
+
+function countFilledBlanks(answer: FillInBlankAnswer): number {
+  return Object.values(answer).filter(v => v && v.trim()).length;
+}
+
+function BlankCounter({ config, answer }: {
+  config: FillInBlankConfig;
+  answer: FillInBlankAnswer;
+}) {
+  const total = countBlanks(config);
+  const filled = countFilledBlanks(answer);
+  
+  return (
+    <div className="blank-counter">
+      {filled} of {total} blanks completed
+    </div>
+  );
+}
+```
+
+## Related Components
+
+- **BaseQuestion**: Base component for all questions
+- **ShortAnswer**: For single text input questions
+- **MultipleChoice**: For selection-based questions
+- **Essay**: For extended text responses
+
+## Related Hooks
+
+- **useQuestionState**: Manage question state
+- **useQuestionContext**: Access question context
+- **useValidation**: Custom validation logic
+
+## Notes
+
+- Input fields auto-size based on content with a minimum width
+- Text segments support custom content renderers for Markdown/HTML
+- Blank IDs must be unique within a question
+- Answer values are trimmed before validation
+- Case sensitivity is configurable per blank
+- Multiple correct answers are supported per blank
+- Placeholders default to "___" if not specified
+- Validation runs when user moves away from an input if configured

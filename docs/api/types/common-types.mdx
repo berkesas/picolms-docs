@@ -1,0 +1,1033 @@
+---
+id: common-types
+title: Common Types
+sidebar_label: Common Types
+---
+
+# Common Types
+
+Shared TypeScript types and interfaces used across all quiz and assessment components in the PicoLMS library.
+
+## Overview
+
+The common types module provides:
+
+- **Content Rendering**: Function types for rendering different content formats
+- **Base Metadata**: Standard metadata structure for all entities
+- **Media Attachments**: Types for handling various media files
+- **Difficulty Levels**: Standardized difficulty classifications
+- **Feedback System**: Types for user feedback and validation
+- **Accessibility**: Configuration for accessible components
+
+## Import
+```tsx
+import type {
+  ContentRenderer,
+  BaseMetadata,
+  MediaAttachment,
+  MediaType,
+  DifficultyLevel,
+  Feedback,
+  FeedbackType,
+  ValidationResult,
+  AccessibilityConfig,
+} from '@scinforma/picolms';
+```
+
+---
+
+## Types
+
+### `ContentRenderer`
+
+A function type for rendering content with context-awareness.
+```typescript
+type ContentRenderer = (
+  content: string,
+  context?: {
+    type: 'question' | 'option' | 'instruction' | 'feedback' | 'hint';
+    questionId?: string;
+    optionId?: string;
+  }
+) => ReactNode;
+```
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `content` | `string` | Yes | The content to render (string, HTML, Markdown, etc.) |
+| `context` | `object` | No | Additional context about where/how content is used |
+| `context.type` | `string` | No | Type of content being rendered |
+| `context.questionId` | `string` | No | Associated question identifier |
+| `context.optionId` | `string` | No | Associated option identifier |
+
+#### Returns
+
+`ReactNode` - Rendered React component or element
+
+#### Example
+```tsx
+import { ContentRenderer } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+
+const markdownRenderer: ContentRenderer = (content, context) => {
+  if (context?.type === 'question') {
+    return (
+      <div className="question-text">
+        <ReactMarkdown>{content}</ReactMarkdown>
+      </div>
+    );
+  }
+  
+  if (context?.type === 'feedback') {
+    return <span className="feedback-message">{content}</span>;
+  }
+  
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+// Usage in component
+<Question
+  config={questionConfig}
+  contentRenderer={markdownRenderer}
+/>
+```
+
+#### Context Types
+
+- `'question'` - Main question text
+- `'option'` - Answer option text
+- `'instruction'` - Instructional text
+- `'feedback'` - Feedback messages
+- `'hint'` - Hint text
+
+---
+
+### `MediaType`
+
+Enumeration of supported media attachment types.
+```typescript
+type MediaType = 'image' | 'video' | 'audio' | 'document';
+```
+
+#### Values
+
+| Value | Description | Common Formats |
+|-------|-------------|----------------|
+| `'image'` | Image files | PNG, JPEG, GIF, SVG, WebP |
+| `'video'` | Video files | MP4, WebM, OGG |
+| `'audio'` | Audio files | MP3, WAV, OGG |
+| `'document'` | Document files | PDF, DOCX, TXT |
+
+#### Example
+```tsx
+const imageMedia: MediaType = 'image';
+const videoMedia: MediaType = 'video';
+
+// Use in media validation
+function validateMediaType(type: MediaType) {
+  const allowedTypes: MediaType[] = ['image', 'video'];
+  return allowedTypes.includes(type);
+}
+```
+
+---
+
+### `DifficultyLevel`
+
+Standardized difficulty level classification.
+```typescript
+type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+```
+
+#### Values
+
+| Level | Description | Typical Use Case |
+|-------|-------------|------------------|
+| `'beginner'` | Entry-level content | Introduction, basic concepts |
+| `'intermediate'` | Moderate difficulty | Applied knowledge, problem-solving |
+| `'advanced'` | High difficulty | Complex scenarios, synthesis |
+| `'expert'` | Expert-level | Research-level, specialized knowledge |
+
+#### Example
+```tsx
+import { DifficultyLevel } from '@scinforma/picolms';
+
+interface QuestionMetadata {
+  difficulty: DifficultyLevel;
+  estimatedTime: number;
+}
+
+const metadata: QuestionMetadata = {
+  difficulty: 'intermediate',
+  estimatedTime: 300, // 5 minutes
+};
+
+// Filter questions by difficulty
+const filterByDifficulty = (
+  questions: Question[],
+  level: DifficultyLevel
+) => {
+  return questions.filter(q => q.metadata?.difficulty === level);
+};
+```
+
+---
+
+### `FeedbackType`
+
+Types of feedback that can be provided to users.
+```typescript
+type FeedbackType = 'correct' | 'incorrect' | 'partial' | 'hint';
+```
+
+#### Values
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| `'correct'` | Answer is correct | Positive reinforcement |
+| `'incorrect'` | Answer is incorrect | Error notification |
+| `'partial'` | Answer is partially correct | Partial credit scenarios |
+| `'hint'` | Hint or guidance | Progressive assistance |
+
+#### Example
+```tsx
+import { FeedbackType } from '@scinforma/picolms';
+
+function getFeedbackStyle(type: FeedbackType): string {
+  const styles: Record<FeedbackType, string> = {
+    correct: 'text-green-600 bg-green-50',
+    incorrect: 'text-red-600 bg-red-50',
+    partial: 'text-yellow-600 bg-yellow-50',
+    hint: 'text-blue-600 bg-blue-50',
+  };
+  
+  return styles[type];
+}
+```
+
+---
+
+## Interfaces
+
+### `BaseMetadata`
+
+Base metadata interface that can be extended by all entities.
+```typescript
+interface BaseMetadata {
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  tags?: string[];
+  [key: string]: any;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `createdAt` | `string` | No | ISO 8601 timestamp of creation |
+| `updatedAt` | `string` | No | ISO 8601 timestamp of last update |
+| `createdBy` | `string` | No | Identifier of the creator (user ID, email, etc.) |
+| `tags` | `string[]` | No | Array of tag strings for categorization |
+| `[key: string]` | `any` | No | Additional custom properties (index signature) |
+
+#### Example
+```tsx
+import { BaseMetadata } from '@scinforma/picolms';
+
+// Basic usage
+const metadata: BaseMetadata = {
+  createdAt: '2024-01-15T10:30:00Z',
+  updatedAt: '2024-01-16T14:20:00Z',
+  createdBy: 'user-123',
+  tags: ['mathematics', 'algebra', 'quadratic-equations'],
+};
+
+// Extended with custom fields
+interface QuestionMetadata extends BaseMetadata {
+  difficulty: DifficultyLevel;
+  estimatedTime: number;
+  subject: string;
+  learningObjectives: string[];
+}
+
+const questionMeta: QuestionMetadata = {
+  createdAt: '2024-01-15T10:30:00Z',
+  createdBy: 'instructor-456',
+  tags: ['physics', 'mechanics'],
+  difficulty: 'advanced',
+  estimatedTime: 600,
+  subject: 'Classical Mechanics',
+  learningObjectives: ['Apply Newton\'s laws', 'Analyze force diagrams'],
+};
+
+// Access custom properties
+const customField = metadata['customProperty']; // Type: any
+```
+
+#### Timestamp Format
+
+Use ISO 8601 format for all timestamp fields:
+```tsx
+const now = new Date().toISOString();
+// "2024-12-29T15:30:45.123Z"
+
+const metadata: BaseMetadata = {
+  createdAt: now,
+  updatedAt: now,
+};
+```
+
+---
+
+### `MediaAttachment`
+
+Represents a media file attached to content.
+```typescript
+interface MediaAttachment {
+  id: string;
+  type: MediaType;
+  url: string;
+  alt?: string;
+  caption?: string;
+  thumbnail?: string;
+  mimeType?: string;
+  size?: number;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the media attachment |
+| `type` | `MediaType` | Yes | Type of media (`'image'`, `'video'`, `'audio'`, `'document'`) |
+| `url` | `string` | Yes | URL to access the media file |
+| `alt` | `string` | No | Alternative text for accessibility (recommended for images) |
+| `caption` | `string` | No | Display caption for the media |
+| `thumbnail` | `string` | No | URL to thumbnail version (recommended for videos/documents) |
+| `mimeType` | `string` | No | MIME type of the file (e.g., `'image/png'`, `'video/mp4'`) |
+| `size` | `number` | No | File size in bytes |
+
+#### Example
+```tsx
+import { MediaAttachment } from '@scinforma/picolms';
+
+// Image attachment
+const imageAttachment: MediaAttachment = {
+  id: 'media-001',
+  type: 'image',
+  url: 'https://example.com/images/diagram.png',
+  alt: 'Mathematical diagram showing Pythagorean theorem',
+  caption: 'Figure 1: Pythagorean theorem visualization',
+  thumbnail: 'https://example.com/images/diagram-thumb.png',
+  mimeType: 'image/png',
+  size: 245760, // 240 KB
+};
+
+// Video attachment
+const videoAttachment: MediaAttachment = {
+  id: 'media-002',
+  type: 'video',
+  url: 'https://example.com/videos/lecture.mp4',
+  alt: 'Physics lecture on momentum',
+  caption: 'Lecture 5: Conservation of Momentum',
+  thumbnail: 'https://example.com/videos/lecture-thumb.jpg',
+  mimeType: 'video/mp4',
+  size: 52428800, // 50 MB
+};
+
+// Document attachment
+const docAttachment: MediaAttachment = {
+  id: 'media-003',
+  type: 'document',
+  url: 'https://example.com/docs/reference.pdf',
+  caption: 'Reference Material: Chapter 3',
+  thumbnail: 'https://example.com/docs/reference-preview.png',
+  mimeType: 'application/pdf',
+  size: 1048576, // 1 MB
+};
+
+// Render media attachment
+function MediaDisplay({ media }: { media: MediaAttachment }) {
+  if (media.type === 'image') {
+    return (
+      <figure>
+        <img src={media.url} alt={media.alt} />
+        {media.caption && <figcaption>{media.caption}</figcaption>}
+      </figure>
+    );
+  }
+  
+  if (media.type === 'video') {
+    return (
+      <video
+        src={media.url}
+        poster={media.thumbnail}
+        controls
+        aria-label={media.alt}
+      >
+        {media.caption}
+      </video>
+    );
+  }
+  
+  return null;
+}
+```
+
+#### Common MIME Types
+
+| Media Type | Common MIME Types |
+|------------|-------------------|
+| Image | `image/png`, `image/jpeg`, `image/gif`, `image/svg+xml`, `image/webp` |
+| Video | `video/mp4`, `video/webm`, `video/ogg` |
+| Audio | `audio/mpeg`, `audio/wav`, `audio/ogg` |
+| Document | `application/pdf`, `application/msword`, `text/plain` |
+
+---
+
+### `Feedback`
+
+Represents user feedback for assessments.
+```typescript
+interface Feedback {
+  type: FeedbackType;
+  message: string;
+  showAfter?: 'immediate' | 'submission' | 'grading';
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `type` | `FeedbackType` | Yes | - | Type of feedback |
+| `message` | `string` | Yes | - | Feedback message content |
+| `showAfter` | `'immediate'` \| `'submission'` \| `'grading'` | No | - | When to display the feedback |
+
+#### showAfter Values
+
+| Value | Description | Use Case |
+|-------|-------------|----------|
+| `'immediate'` | Show immediately after user interaction | Real-time validation, hints |
+| `'submission'` | Show after form submission | Post-attempt feedback |
+| `'grading'` | Show after grading is complete | Instructor feedback, detailed explanations |
+
+#### Example
+```tsx
+import { Feedback, FeedbackType } from '@scinforma/picolms';
+
+// Correct answer feedback
+const correctFeedback: Feedback = {
+  type: 'correct',
+  message: 'Excellent work! Your answer is correct.',
+  showAfter: 'immediate',
+};
+
+// Incorrect answer with hint
+const incorrectFeedback: Feedback = {
+  type: 'incorrect',
+  message: 'Not quite right. Remember to consider the force of friction.',
+  showAfter: 'immediate',
+};
+
+// Partial credit feedback
+const partialFeedback: Feedback = {
+  type: 'partial',
+  message: 'You\'re on the right track! You identified 3 out of 5 key points.',
+  showAfter: 'submission',
+};
+
+// Progressive hint
+const hintFeedback: Feedback = {
+  type: 'hint',
+  message: 'Try breaking down the problem into smaller steps.',
+  showAfter: 'immediate',
+};
+
+// Detailed grading feedback
+const gradingFeedback: Feedback = {
+  type: 'incorrect',
+  message: 'Your approach was creative, but missed the key concept of energy conservation. Review section 4.2 in the textbook.',
+  showAfter: 'grading',
+};
+
+// Render feedback component
+function FeedbackDisplay({ feedback }: { feedback: Feedback }) {
+  const bgColor = {
+    correct: 'bg-green-50 border-green-200',
+    incorrect: 'bg-red-50 border-red-200',
+    partial: 'bg-yellow-50 border-yellow-200',
+    hint: 'bg-blue-50 border-blue-200',
+  }[feedback.type];
+
+  return (
+    <div className={`p-4 border rounded ${bgColor}`}>
+      <p>{feedback.message}</p>
+    </div>
+  );
+}
+
+// Multiple feedback items
+interface QuestionConfig {
+  id: string;
+  question: string;
+  feedback: {
+    correct?: Feedback;
+    incorrect?: Feedback;
+    hints?: Feedback[];
+  };
+}
+
+const questionConfig: QuestionConfig = {
+  id: 'q1',
+  question: 'What is the capital of France?',
+  feedback: {
+    correct: {
+      type: 'correct',
+      message: 'Correct! Paris is the capital of France.',
+      showAfter: 'immediate',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Incorrect. Try again!',
+      showAfter: 'immediate',
+    },
+    hints: [
+      {
+        type: 'hint',
+        message: 'Think about major European cities.',
+        showAfter: 'immediate',
+      },
+      {
+        type: 'hint',
+        message: 'It\'s known as the "City of Light".',
+        showAfter: 'immediate',
+      },
+    ],
+  },
+};
+```
+
+---
+
+### `ValidationResult`
+
+Result of a validation operation.
+```typescript
+interface ValidationResult {
+  isValid: boolean;
+  errors?: string[];
+  warnings?: string[];
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `isValid` | `boolean` | Yes | Whether validation passed |
+| `errors` | `string[]` | No | Array of error messages (blocks submission) |
+| `warnings` | `string[]` | No | Array of warning messages (allows submission) |
+
+#### Example
+```tsx
+import { ValidationResult } from '@scinforma/picolms';
+
+// Valid result
+const validResult: ValidationResult = {
+  isValid: true,
+};
+
+// Invalid with errors
+const invalidResult: ValidationResult = {
+  isValid: false,
+  errors: [
+    'Answer is required',
+    'Answer must be at least 10 characters',
+  ],
+};
+
+// Valid with warnings
+const validWithWarnings: ValidationResult = {
+  isValid: true,
+  warnings: [
+    'Consider providing more detail',
+    'This answer is shorter than recommended',
+  ],
+};
+
+// Complex validation
+const complexResult: ValidationResult = {
+  isValid: false,
+  errors: ['Email format is invalid'],
+  warnings: ['Password should contain special characters'],
+};
+
+// Validation function
+function validateAnswer(answer: string): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  if (!answer || answer.trim().length === 0) {
+    errors.push('Answer is required');
+  }
+
+  if (answer.length < 10) {
+    errors.push('Answer must be at least 10 characters');
+  }
+
+  if (answer.length < 50) {
+    warnings.push('Consider providing more detail for a complete answer');
+  }
+
+  if (!/[A-Z]/.test(answer)) {
+    warnings.push('Consider starting sentences with capital letters');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors: errors.length > 0 ? errors : undefined,
+    warnings: warnings.length > 0 ? warnings : undefined,
+  };
+}
+
+// Display validation results
+function ValidationDisplay({ result }: { result: ValidationResult }) {
+  return (
+    <div>
+      {result.errors && result.errors.length > 0 && (
+        <div className="errors">
+          <h4>Errors:</h4>
+          <ul>
+            {result.errors.map((error, i) => (
+              <li key={i} className="text-red-600">{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      {result.warnings && result.warnings.length > 0 && (
+        <div className="warnings">
+          <h4>Warnings:</h4>
+          <ul>
+            {result.warnings.map((warning, i) => (
+              <li key={i} className="text-yellow-600">{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      {result.isValid && (
+        <p className="text-green-600">Validation passed ✓</p>
+      )}
+    </div>
+  );
+}
+
+// Use in form submission
+function handleSubmit(answer: string) {
+  const validation = validateAnswer(answer);
+  
+  if (!validation.isValid) {
+    // Show errors, prevent submission
+    showValidationErrors(validation.errors);
+    return;
+  }
+  
+  if (validation.warnings) {
+    // Show warnings, allow submission
+    showValidationWarnings(validation.warnings);
+  }
+  
+  submitAnswer(answer);
+}
+```
+
+---
+
+### `AccessibilityConfig`
+
+Configuration for accessibility features.
+```typescript
+interface AccessibilityConfig {
+  ariaLabel?: string;
+  ariaDescribedBy?: string;
+  screenReaderText?: string;
+  keyboardShortcuts?: Record<string, string>;
+}
+```
+
+#### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `ariaLabel` | `string` | No | ARIA label for the element |
+| `ariaDescribedBy` | `string` | No | ID(s) of elements that describe this element |
+| `screenReaderText` | `string` | No | Additional text for screen readers (visually hidden) |
+| `keyboardShortcuts` | `Record<string, string>` | No | Map of keyboard shortcuts to their descriptions |
+
+#### Example
+```tsx
+import { AccessibilityConfig } from '@scinforma/picolms';
+
+// Basic accessibility
+const basicA11y: AccessibilityConfig = {
+  ariaLabel: 'Multiple choice question',
+  screenReaderText: 'Select one answer from the options below',
+};
+
+// With describedBy
+const withDescription: AccessibilityConfig = {
+  ariaLabel: 'Math equation input',
+  ariaDescribedBy: 'equation-hint equation-format',
+  screenReaderText: 'Enter your answer using standard mathematical notation',
+};
+
+// With keyboard shortcuts
+const withShortcuts: AccessibilityConfig = {
+  ariaLabel: 'Interactive quiz question',
+  screenReaderText: 'Use keyboard shortcuts for faster navigation',
+  keyboardShortcuts: {
+    'Enter': 'Submit answer',
+    'Space': 'Select/deselect option',
+    'Tab': 'Navigate to next element',
+    'Shift+Tab': 'Navigate to previous element',
+    'Escape': 'Cancel and return',
+    'H': 'Show hint',
+  },
+};
+
+// Complete configuration
+const completeA11y: AccessibilityConfig = {
+  ariaLabel: 'Essay question with file upload',
+  ariaDescribedBy: 'question-instructions file-upload-help',
+  screenReaderText: 'Type your essay response. You can also upload a document using the upload button below.',
+  keyboardShortcuts: {
+    'Ctrl+Enter': 'Submit response',
+    'Ctrl+S': 'Save draft',
+    'Ctrl+U': 'Open file upload dialog',
+  },
+};
+
+// Apply to component
+function AccessibleQuestion({ config, a11y }: {
+  config: QuestionConfig;
+  a11y: AccessibilityConfig;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={a11y.ariaLabel}
+      aria-describedby={a11y.ariaDescribedBy}
+    >
+      {a11y.screenReaderText && (
+        <span className="sr-only">{a11y.screenReaderText}</span>
+      )}
+      
+      <h3>{config.question}</h3>
+      
+      {/* Question content */}
+      
+      {a11y.keyboardShortcuts && (
+        <div className="keyboard-shortcuts" aria-label="Keyboard shortcuts">
+          <h4>Keyboard Shortcuts:</h4>
+          <dl>
+            {Object.entries(a11y.keyboardShortcuts).map(([key, desc]) => (
+              <div key={key}>
+                <dt><kbd>{key}</kbd></dt>
+                <dd>{desc}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Keyboard shortcut handler
+function useKeyboardShortcuts(shortcuts: Record<string, string>) {
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      const key = [
+        e.ctrlKey && 'Ctrl',
+        e.shiftKey && 'Shift',
+        e.altKey && 'Alt',
+        e.key,
+      ].filter(Boolean).join('+');
+
+      if (shortcuts[key]) {
+        e.preventDefault();
+        handleShortcut(key);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [shortcuts]);
+}
+```
+
+---
+
+## Usage Examples
+
+### Complete Question Component
+```tsx
+import {
+  ContentRenderer,
+  BaseMetadata,
+  MediaAttachment,
+  DifficultyLevel,
+  Feedback,
+  ValidationResult,
+  AccessibilityConfig,
+} from '@scinforma/picolms';
+
+interface QuestionConfig {
+  id: string;
+  type: string;
+  question: string;
+  difficulty: DifficultyLevel;
+  media?: MediaAttachment[];
+  feedback?: {
+    correct: Feedback;
+    incorrect: Feedback;
+    hints: Feedback[];
+  };
+  metadata: BaseMetadata;
+  accessibility: AccessibilityConfig;
+}
+
+const questionConfig: QuestionConfig = {
+  id: 'phys-101-q1',
+  type: 'short-answer',
+  question: 'Explain Newton\'s First Law of Motion.',
+  difficulty: 'beginner',
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/newton-first-law.png',
+      alt: 'Diagram illustrating Newton\'s First Law',
+      caption: 'Figure 1: Object at rest and in motion',
+      mimeType: 'image/png',
+      size: 156000,
+    },
+  ],
+  feedback: {
+    correct: {
+      type: 'correct',
+      message: 'Excellent explanation!',
+      showAfter: 'submission',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Review the concept of inertia.',
+      showAfter: 'submission',
+    },
+    hints: [
+      {
+        type: 'hint',
+        message: 'Think about what happens when no force is applied.',
+        showAfter: 'immediate',
+      },
+    ],
+  },
+  metadata: {
+    createdAt: '2024-01-15T10:00:00Z',
+    createdBy: 'instructor-123',
+    tags: ['physics', 'mechanics', 'newton-laws'],
+    subject: 'Classical Mechanics',
+    estimatedTime: 300,
+  },
+  accessibility: {
+    ariaLabel: 'Physics question about Newton\'s First Law',
+    ariaDescribedBy: 'question-hint-1',
+    screenReaderText: 'Provide a detailed explanation in the text area below',
+    keyboardShortcuts: {
+      'Ctrl+Enter': 'Submit answer',
+      'H': 'Show hint',
+    },
+  },
+};
+
+function Question({ config, contentRenderer }: {
+  config: QuestionConfig;
+  contentRenderer: ContentRenderer;
+}) {
+  const [answer, setAnswer] = useState('');
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
+
+  const validateAnswer = (): ValidationResult => {
+    const errors: string[] = [];
+    
+    if (!answer.trim()) {
+      errors.push('Answer is required');
+    }
+    
+    if (answer.length < 50) {
+      errors.push('Answer must be at least 50 characters');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  };
+
+  const handleSubmit = () => {
+    const result = validateAnswer();
+    setValidation(result);
+    
+    if (result.isValid) {
+      // Submit answer
+    }
+  };
+
+  return (
+    <div
+      role="group"
+      aria-label={config.accessibility.ariaLabel}
+      aria-describedby={config.accessibility.ariaDescribedBy}
+    >
+      {/* Render question with custom renderer */}
+      <h3>
+        {contentRenderer(config.question, {
+          type: 'question',
+          questionId: config.id,
+        })}
+      </h3>
+
+      {/* Display media attachments */}
+      {config.media?.map(media => (
+        <figure key={media.id}>
+          <img src={media.url} alt={media.alt} />
+          {media.caption && <figcaption>{media.caption}</figcaption>}
+        </figure>
+      ))}
+
+      {/* Answer input */}
+      <textarea
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        aria-label="Your answer"
+      />
+
+      {/* Validation errors */}
+      {validation && !validation.isValid && (
+        <div className="errors">
+          {validation.errors?.map((error, i) => (
+            <p key={i} className="text-red-600">{error}</p>
+          ))}
+        </div>
+      )}
+
+      <button onClick={handleSubmit}>Submit</button>
+    </div>
+  );
+}
+```
+
+---
+
+## TypeScript
+
+All types are fully typed and can be imported individually or together:
+```tsx
+// Import specific types
+import type { ContentRenderer, MediaAttachment } from '@scinforma/picolms';
+
+// Import multiple types
+import type {
+  BaseMetadata,
+  DifficultyLevel,
+  Feedback,
+  ValidationResult,
+} from '@scinforma/picolms';
+
+// Use with generics
+interface CustomMetadata extends BaseMetadata {
+  customField: string;
+}
+
+const metadata: CustomMetadata = {
+  createdAt: '2024-01-15T10:00:00Z',
+  tags: ['custom'],
+  customField: 'value',
+};
+```
+
+---
+
+## Best Practices
+
+### Content Rendering
+
+1. **Sanitize HTML**: Always sanitize HTML content to prevent XSS attacks
+2. **Support Multiple Formats**: Support plain text, HTML, and Markdown
+3. **Context-Aware**: Use context to apply appropriate styling
+```tsx
+import DOMPurify from 'dompurify';
+import ReactMarkdown from 'react-markdown';
+
+const safeRenderer: ContentRenderer = (content, context) => {
+  // Detect format
+  if (content.includes('<')) {
+    // HTML content - sanitize
+    const clean = DOMPurify.sanitize(content);
+    return <div dangerouslySetInnerHTML={{ __html: clean }} />;
+  }
+  
+  if (content.includes('#') || content.includes('**')) {
+    // Markdown content
+    return <ReactMarkdown>{content}</ReactMarkdown>;
+  }
+  
+  // Plain text
+  return <span>{content}</span>;
+};
+```
+
+### Media Attachments
+
+1. **Always Provide Alt Text**: Required for accessibility
+2. **Use Thumbnails**: Improve performance for large files
+3. **Validate File Sizes**: Prevent uploading excessively large files
+4. **Include MIME Types**: Enable proper handling
+
+### Validation
+
+1. **Separate Errors and Warnings**: Errors block submission, warnings don't
+2. **Provide Clear Messages**: Help users understand what's wrong
+3. **Validate Early**: Show validation feedback as users type
+
+### Accessibility
+
+1. **Provide ARIA Labels**: Describe purpose of interactive elements
+2. **Document Shortcuts**: Make keyboard navigation discoverable
+3. **Test with Screen Readers**: Verify screen reader text is helpful
+4. **Support Keyboard Navigation**: All functionality accessible via keyboard
+
+---
+
+## Related Documentation
+
+- **useQuestionState**: Manage question state with these types
+- **BaseQuestion**: Base question component using these types
+- **Question Components**: Specific question types implementing these interfaces
+
+---
+
+## Notes
+
+- All timestamp fields should use ISO 8601 format
+- Media URLs should be properly validated and sanitized
+- The `BaseMetadata` index signature allows flexibility while maintaining type safety
+- Content renderers should handle all specified content types
+- Always sanitize user-generated content before rendering
