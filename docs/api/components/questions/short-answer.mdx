@@ -1,0 +1,1100 @@
+---
+id: short-answer-component
+title: Short Answer Component
+sidebar_label: ShortAnswer
+---
+
+# &lt;ShortAnswer/&gt;
+
+A React component for short-answer questions where users provide brief text responses in a single-line input field.
+
+## Overview
+
+The `ShortAnswer` component provides:
+
+- **Single-Line Input**: Text input field for brief responses
+- **Length Constraints**: Configurable minimum and maximum character limits
+- **Pattern Validation**: Regex pattern matching for structured answers
+- **Character Counting**: Real-time character count display
+- **Multiple Correct Answers**: Accept various correct responses for auto-grading
+- **Case Sensitivity**: Configurable case-sensitive matching
+- **Whitespace Handling**: Optional automatic whitespace trimming
+- **Enhanced Validation**: Built-in validation with custom rules via hook
+- **Check Button**: Optional instant feedback button
+- **Accessibility**: Full ARIA support and keyboard navigation
+- **Media Support**: Attach images, videos, and documents
+- **Feedback System**: Hints, validation messages, and grading feedback
+
+## Import
+```tsx
+import { ShortAnswer } from '@scinforma/picolms';
+import type { ShortAnswerConfig, ShortAnswerAnswer } from '@scinforma/picolms';
+```
+
+## Basic Usage
+```tsx
+import { ShortAnswer } from '@scinforma/picolms';
+
+const shortAnswerConfig: ShortAnswerConfig = {
+  id: 'sa-1',
+  type: 'short-answer',
+  question: 'What is the capital of France?',
+  points: 5,
+  correctAnswers: ['Paris', 'paris'],
+  caseSensitive: false,
+  placeholder: 'Enter city name',
+};
+
+function MyQuiz() {
+  return <ShortAnswer config={shortAnswerConfig} />;
+}
+```
+
+## Props
+
+### `ShortAnswerProps`
+```typescript
+interface ShortAnswerProps extends Omit<BaseQuestionProps<ShortAnswerAnswer>, 'config'> {
+  config: ShortAnswerConfig;
+  renderContent?: ContentRenderer;
+  children?: ReactNode;
+}
+```
+
+#### Configuration Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `config` | `ShortAnswerConfig` | Yes | Short answer question configuration |
+| `renderContent` | `ContentRenderer` | No | Custom content renderer for Markdown/HTML |
+| `children` | `ReactNode` | No | Additional child elements to render |
+| `initialAnswer` | `ShortAnswerAnswer` | No | Initial answer value (string) |
+| `onAnswerChange` | `(answer: QuestionAnswer<ShortAnswerAnswer>) => void` | No | Callback when answer changes |
+| `onValidate` | `(result: ValidationResult) => void` | No | Callback when validation runs |
+| `autoSave` | `boolean` | No | Enable automatic saving |
+| `autoSaveDelay` | `number` | No | Auto-save delay in milliseconds |
+
+### `ShortAnswerConfig`
+
+**Key Properties:**
+```typescript
+interface ShortAnswerConfig extends BaseQuestionConfig {
+  type: 'short-answer';
+  correctAnswers?: string[];
+  caseSensitive?: boolean;
+  trimWhitespace?: boolean;
+  maxLength?: number;
+  minLength?: number;
+  pattern?: string;
+  placeholder?: string;
+  validation?: QuestionValidationConfig;
+}
+```
+
+### `ShortAnswerAnswer`
+```typescript
+type ShortAnswerAnswer = string;
+```
+
+The short answer is a simple string value.
+
+## Examples
+
+### Basic Short Answer
+```tsx
+import { ShortAnswer } from '@scinforma/picolms';
+
+const basicConfig: ShortAnswerConfig = {
+  id: 'sa-basic',
+  type: 'short-answer',
+  question: 'What is the chemical symbol for gold?',
+  points: 3,
+  correctAnswers: ['Au', 'AU', 'au'],
+  caseSensitive: false,
+  placeholder: 'Enter symbol',
+};
+
+function BasicShortAnswer() {
+  return <ShortAnswer config={basicConfig} />;
+}
+```
+
+### With Character Limits
+```tsx
+const withLimitsConfig: ShortAnswerConfig = {
+  id: 'sa-limits',
+  type: 'short-answer',
+  question: 'Provide a brief definition of photosynthesis (max 100 characters)',
+  points: 10,
+  minLength: 20,
+  maxLength: 100,
+  placeholder: 'Type your definition...',
+};
+
+function ShortAnswerWithLimits() {
+  return <ShortAnswer config={withLimitsConfig} />;
+}
+```
+
+### With Pattern Validation (Email)
+```tsx
+const emailConfig: ShortAnswerConfig = {
+  id: 'sa-email',
+  type: 'short-answer',
+  question: 'Enter your email address',
+  points: 0,
+  pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+  placeholder: 'you@example.com',
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Email is required',
+      },
+      {
+        type: 'pattern',
+        value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+        message: 'Please enter a valid email address',
+      },
+    ],
+    validateOnBlur: true,
+  },
+};
+
+function EmailShortAnswer() {
+  return <ShortAnswer config={emailConfig} />;
+}
+```
+
+### With Multiple Correct Answers
+```tsx
+const multipleCorrectConfig: ShortAnswerConfig = {
+  id: 'sa-multiple',
+  type: 'short-answer',
+  question: 'What is H2O commonly known as?',
+  points: 5,
+  correctAnswers: [
+    'water',
+    'Water',
+    'dihydrogen monoxide',
+    'Dihydrogen monoxide',
+    'H2O',
+  ],
+  caseSensitive: false,
+  placeholder: 'Enter common name',
+};
+
+function MultipleCorrectAnswers() {
+  return <ShortAnswer config={multipleCorrectConfig} />;
+}
+```
+
+### Case-Sensitive Answer
+```tsx
+const caseSensitiveConfig: ShortAnswerConfig = {
+  id: 'sa-case',
+  type: 'short-answer',
+  question: 'Enter the exact abbreviation for Deoxyribonucleic Acid',
+  instructions: 'Answer is case-sensitive',
+  points: 5,
+  correctAnswers: ['DNA'],
+  caseSensitive: true,
+  placeholder: 'Exact abbreviation',
+};
+
+function CaseSensitiveAnswer() {
+  return <ShortAnswer config={caseSensitiveConfig} />;
+}
+```
+
+### With Whitespace Trimming
+```tsx
+const trimConfig: ShortAnswerConfig = {
+  id: 'sa-trim',
+  type: 'short-answer',
+  question: 'What is the speed of light in meters per second?',
+  points: 5,
+  correctAnswers: ['299792458', '299,792,458', '3×10^8', '3e8'],
+  trimWhitespace: true, // Remove leading/trailing whitespace
+  caseSensitive: false,
+  placeholder: 'Enter value',
+};
+
+function TrimmedShortAnswer() {
+  return <ShortAnswer config={trimConfig} />;
+}
+```
+
+### With Custom Content Renderer (Markdown)
+```tsx
+import { ShortAnswer } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content, context) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const markdownConfig: ShortAnswerConfig = {
+  id: 'sa-markdown',
+  type: 'short-answer',
+  question: `
+What is the formula for **Einstein's mass-energy equivalence**?
+
+_Hint: It relates energy (E), mass (m), and the speed of light (c)_
+  `,
+  points: 10,
+  correctAnswers: ['E=mc^2', 'E=mc²', 'E = mc^2', 'E = mc²'],
+  caseSensitive: false,
+  placeholder: 'Enter formula',
+};
+
+function MarkdownShortAnswer() {
+  return (
+    <ShortAnswer 
+      config={markdownConfig} 
+      renderContent={markdownRenderer}
+    />
+  );
+}
+```
+
+### With Media
+```tsx
+const withMediaConfig: ShortAnswerConfig = {
+  id: 'sa-media',
+  type: 'short-answer',
+  question: 'Identify the element shown in the diagram',
+  points: 5,
+  correctAnswers: ['Hydrogen', 'hydrogen', 'H'],
+  caseSensitive: false,
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/element-diagram.png',
+      alt: 'Atomic structure diagram',
+      caption: 'Figure 1: Atomic structure of an element',
+    },
+  ],
+  placeholder: 'Element name or symbol',
+};
+
+function ShortAnswerWithMedia() {
+  return <ShortAnswer config={withMediaConfig} />;
+}
+```
+
+### With Validation Rules
+```tsx
+const validatedConfig: ShortAnswerConfig = {
+  id: 'sa-validated',
+  type: 'short-answer',
+  question: 'Enter a positive integer between 1 and 100',
+  points: 5,
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Answer is required',
+      },
+      {
+        type: 'pattern',
+        value: '^[1-9][0-9]?$|^100$',
+        message: 'Must be a number between 1 and 100',
+      },
+      {
+        type: 'custom',
+        message: 'Number must be between 1 and 100',
+        validate: (value: string) => {
+          const num = parseInt(value, 10);
+          return !isNaN(num) && num >= 1 && num <= 100;
+        },
+      },
+    ],
+    validateOnChange: false,
+    validateOnBlur: true,
+  },
+  placeholder: 'Enter number',
+};
+
+function ValidatedShortAnswer() {
+  return <ShortAnswer config={validatedConfig} />;
+}
+```
+
+### With Hints
+```tsx
+const withHintsConfig: ShortAnswerConfig = {
+  id: 'sa-hints',
+  type: 'short-answer',
+  question: 'What year did World War II end?',
+  points: 5,
+  correctAnswers: ['1945'],
+  feedback: {
+    hints: [
+      'The war ended in the mid-1940s',
+      'It was the year after D-Day (1944)',
+      'The year is 1945',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Correct! WWII ended in 1945.',
+      showAfter: 'immediate',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Not quite. Try again or check the hints.',
+      showAfter: 'immediate',
+    },
+  },
+  placeholder: 'Enter year',
+};
+
+function ShortAnswerWithHints() {
+  return <ShortAnswer config={withHintsConfig} />;
+}
+```
+
+### With Check Button
+```tsx
+const checkButtonConfig: ShortAnswerConfig = {
+  id: 'sa-check',
+  type: 'short-answer',
+  question: 'What is 7 × 8?',
+  points: 3,
+  correctAnswers: ['56'],
+  placeholder: 'Enter answer',
+};
+
+function ShortAnswerWithCheck() {
+  return (
+    <ShortAnswer 
+      config={checkButtonConfig}
+      showCheckButton={true} // Enable instant feedback button
+    />
+  );
+}
+```
+
+### With Answer Change Callback
+```tsx
+import { useState } from 'react';
+import { ShortAnswer } from '@scinforma/picolms';
+import type { QuestionAnswer } from '@scinforma/picolms';
+
+function ShortAnswerWithCallback() {
+  const [answerLength, setAnswerLength] = useState(0);
+
+  const handleAnswerChange = (answer: QuestionAnswer<string>) => {
+    setAnswerLength(answer.value.length);
+    
+    console.log('Answer:', answer.value);
+    console.log('Is answered:', answer.isAnswered);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Save to backend
+    saveToBackend(answer);
+  };
+
+  return (
+    <div>
+      <ShortAnswer 
+        config={shortAnswerConfig} 
+        onAnswerChange={handleAnswerChange}
+      />
+      <p className="text-sm text-gray-500">
+        Characters typed: {answerLength}
+      </p>
+    </div>
+  );
+}
+```
+
+### With Auto-Save
+```tsx
+const autoSaveConfig: ShortAnswerConfig = {
+  id: 'sa-autosave',
+  type: 'short-answer',
+  question: 'What is your answer?',
+  points: 10,
+  placeholder: 'Type your answer...',
+};
+
+function AutoSaveShortAnswer() {
+  const handleAnswerChange = async (answer: QuestionAnswer<string>) => {
+    await fetch('/api/save-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(answer),
+    });
+  };
+
+  return (
+    <ShortAnswer 
+      config={autoSaveConfig}
+      autoSave={true}
+      autoSaveDelay={1500} // Save 1.5 seconds after typing stops
+      onAnswerChange={handleAnswerChange}
+    />
+  );
+}
+```
+
+### Controlled Component
+```tsx
+import { useState } from 'react';
+
+function ControlledShortAnswer() {
+  const [answer, setAnswer] = useState('');
+
+  const handleChange = (answer: QuestionAnswer<string>) => {
+    setAnswer(answer.value);
+  };
+
+  const handleReset = () => {
+    setAnswer('');
+  };
+
+  const handlePrefill = () => {
+    setAnswer('Example answer');
+  };
+
+  return (
+    <div>
+      <ShortAnswer 
+        config={shortAnswerConfig}
+        initialAnswer={answer}
+        onAnswerChange={handleChange}
+      />
+      <div className="controls">
+        <button onClick={handleReset}>Reset</button>
+        <button onClick={handlePrefill}>Prefill Answer</button>
+      </div>
+      <div className="preview">
+        <p>Current answer: {answer}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+### With Accessibility Configuration
+```tsx
+const accessibleConfig: ShortAnswerConfig = {
+  id: 'sa-a11y',
+  type: 'short-answer',
+  question: 'What is the primary purpose of ARIA attributes?',
+  points: 10,
+  correctAnswers: [
+    'accessibility',
+    'improve accessibility',
+    'help screen readers',
+    'assistive technology',
+  ],
+  caseSensitive: false,
+  placeholder: 'Enter your answer',
+  accessibility: {
+    ariaLabel: 'Short answer question about ARIA attributes',
+    ariaDescribedBy: 'sa-instructions',
+    screenReaderText: 'Type your answer in the text field. Press Tab to move to the next element.',
+    keyboardShortcuts: {
+      'Enter': 'Submit answer',
+      'Escape': 'Clear answer',
+    },
+  },
+};
+
+function AccessibleShortAnswer() {
+  return <ShortAnswer config={accessibleConfig} />;
+}
+```
+
+### Phone Number Validation
+```tsx
+const phoneConfig: ShortAnswerConfig = {
+  id: 'sa-phone',
+  type: 'short-answer',
+  question: 'Enter your phone number',
+  points: 0,
+  pattern: '^\\(?([0-9]{3})\\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$',
+  placeholder: '(555) 123-4567',
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Phone number is required',
+      },
+      {
+        type: 'pattern',
+        value: '^\\(?([0-9]{3})\\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$',
+        message: 'Please enter a valid phone number (e.g., 555-123-4567)',
+      },
+    ],
+    validateOnBlur: true,
+  },
+};
+
+function PhoneNumberInput() {
+  return <ShortAnswer config={phoneConfig} />;
+}
+```
+
+### Complete Example
+```tsx
+import { ShortAnswer } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer, QuestionAnswer, ValidationResult } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const completeConfig: ShortAnswerConfig = {
+  id: 'sa-complete',
+  type: 'short-answer',
+  title: 'Chemistry Question',
+  question: `
+What is the **molecular formula** for _glucose_?
+
+Provide the exact chemical formula.
+  `,
+  instructions: 'Use standard chemical notation (e.g., H2O for water)',
+  points: 10,
+  required: true,
+  difficulty: 'intermediate',
+  tags: ['chemistry', 'biochemistry', 'molecules'],
+  category: 'Organic Chemistry',
+  
+  // Answer configuration
+  correctAnswers: ['C6H12O6', 'C₆H₁₂O₆'],
+  caseSensitive: true,
+  trimWhitespace: true,
+  
+  // Length constraints
+  minLength: 5,
+  maxLength: 20,
+  placeholder: 'e.g., C6H12O6',
+  
+  // Pattern validation
+  pattern: '^[A-Z][a-z]?[0-9]*([A-Z][a-z]?[0-9]*)*$',
+  
+  // Time limit: 2 minutes
+  timeLimit: 120,
+  
+  // Attempts
+  maxAttempts: 3,
+  
+  // Media
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/glucose-structure.png',
+      alt: 'Structural formula of glucose molecule',
+      caption: 'Figure 1: Glucose molecular structure',
+    },
+  ],
+  
+  // Validation
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Answer is required',
+      },
+      {
+        type: 'minLength',
+        value: 5,
+        message: 'Answer must be at least 5 characters',
+      },
+      {
+        type: 'maxLength',
+        value: 20,
+        message: 'Answer must not exceed 20 characters',
+      },
+      {
+        type: 'pattern',
+        value: '^[A-Z][a-z]?[0-9]*([A-Z][a-z]?[0-9]*)*$',
+        message: 'Please use standard chemical notation',
+      },
+      {
+        type: 'custom',
+        message: 'Formula must contain carbon (C), hydrogen (H), and oxygen (O)',
+        validate: (value: string) => {
+          return value.includes('C') && value.includes('H') && value.includes('O');
+        },
+      },
+    ],
+    validateOnChange: false,
+    validateOnBlur: true,
+  },
+  
+  // Feedback
+  feedback: {
+    hints: [
+      'Glucose is a simple sugar with 6 carbon atoms',
+      'The formula follows the pattern C₆H₁₂O₆',
+      'Use numbers to indicate atom counts (e.g., C6 means 6 carbon atoms)',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Excellent! C6H12O6 is the correct molecular formula for glucose.',
+      showAfter: 'immediate',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Not quite right. Review the structure and try again.',
+      showAfter: 'immediate',
+    },
+  },
+  
+  // Accessibility
+  accessibility: {
+    ariaLabel: 'Short answer question about glucose molecular formula',
+    ariaDescribedBy: 'sa-instructions',
+    screenReaderText: 'Enter the molecular formula using chemical notation. Example: H2O for water.',
+    keyboardShortcuts: {
+      'Enter': 'Check answer',
+      'Ctrl+H': 'Show hints',
+      'Escape': 'Clear input',
+    },
+  },
+  
+  // Metadata
+  metadata: {
+    createdAt: '2024-01-15T10:00:00Z',
+    createdBy: 'instructor-123',
+    tags: ['chemistry', 'molecules', 'formulas'],
+    subject: 'Chemistry',
+    gradeLevel: '10-11',
+    bloomsLevel: 'Remember',
+  },
+};
+
+function CompleteShortAnswer() {
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [attempts, setAttempts] = useState(0);
+
+  const handleAnswerChange = async (answer: QuestionAnswer<string>) => {
+    console.log('Answer:', answer.value);
+    console.log('Is answered:', answer.isAnswered);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Auto-save
+    await saveToBackend(answer);
+    setLastSaved(new Date());
+  };
+
+  const handleValidate = (result: ValidationResult) => {
+    if (!result.isValid) {
+      console.log('Validation errors:', result.errors);
+      setAttempts(prev => prev + 1);
+    } else {
+      console.log('Validation passed');
+    }
+  };
+
+  return (
+    <div>
+      <ShortAnswer
+        config={completeConfig}
+        renderContent={markdownRenderer}
+        onAnswerChange={handleAnswerChange}
+        onValidate={handleValidate}
+        autoSave={true}
+        autoSaveDelay={2000}
+        showCheckButton={true}
+      />
+      
+      {lastSaved && (
+        <p className="text-sm text-gray-500">
+          Last saved: {lastSaved.toLocaleTimeString()}
+        </p>
+      )}
+      
+      {attempts > 0 && (
+        <p className="text-sm text-orange-600">
+          Attempts: {attempts} / {completeConfig.maxAttempts}
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+## Features
+
+### Character Counting
+
+Display real-time character count with optional limits:
+```tsx
+// Shows: 42 / 100
+// Shows: 42 (min: 20)
+```
+
+### Pattern Validation
+
+Use regex patterns for structured input validation:
+```tsx
+// Email pattern
+pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'
+
+// Phone number pattern
+pattern: '^\\(?([0-9]{3})\\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$'
+
+// Chemical formula pattern
+pattern: '^[A-Z][a-z]?[0-9]*([A-Z][a-z]?[0-9]*)*$'
+
+// URL pattern
+pattern: '^https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b'
+```
+
+### Enhanced Validation Hook
+
+The component uses `useShortAnswerValidation` hook to automatically enhance validation based on config properties:
+```tsx
+// Automatically adds validation for:
+// - minLength
+// - maxLength
+// - pattern
+// - correctAnswers (if auto-grading)
+```
+
+### Whitespace Trimming
+
+Automatically trim leading and trailing whitespace:
+```tsx
+const config: ShortAnswerConfig = {
+  // ...
+  trimWhitespace: true, // Applied on change
+};
+```
+
+### Check Button
+
+Enable instant feedback with a check button:
+```tsx
+<ShortAnswer 
+  config={config}
+  showCheckButton={true} // Shows "Check" button
+/>
+```
+
+### Validation on Blur
+
+Trigger validation when input loses focus:
+```tsx
+const config: ShortAnswerConfig = {
+  // ...
+  validation: {
+    validateOnBlur: true,
+  },
+};
+```
+
+## Styling
+
+### CSS Classes
+
+The component uses the following CSS classes:
+```css
+/* Container */
+.picolms-short-answer-question { }
+
+/* Header */
+.picolms-question-header { }
+.picolms-question-title { }
+.picolms-question-text { }
+.picolms-question-instructions { }
+
+/* Media */
+.picolms-question-media { }
+.picolms-media-item { }
+.picolms-media-caption { }
+
+/* Input */
+.picolms-sa-input-container { }
+.picolms-sa-input { }
+.sa-input-error { } /* Error state */
+.picolms-sa-character-count { }
+
+/* Validation */
+.picolms-question-errors { }
+.picolms-error-message { }
+
+/* Feedback */
+.picolms-question-feedback { }
+.feedback-correct { }
+.feedback-incorrect { }
+.feedback-partial { }
+
+/* Hints */
+.picolms-question-hints { }
+.picolms-hint-text { }
+
+/* Metadata */
+.picolms-question-meta { }
+.picolms-question-points { }
+.picolms-question-difficulty { }
+
+/* Actions */
+.picolms-question-actions { }
+.picolms-check-button { }
+```
+
+### Example Styles
+```css
+.picolms-sa-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.picolms-sa-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.sa-input-error {
+  border-color: #ef4444;
+}
+
+.sa-input-error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.picolms-sa-input:disabled {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.picolms-sa-character-count {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+.picolms-check-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  color: white;
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.picolms-check-button:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.picolms-check-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+```
+
+## Accessibility
+
+The ShortAnswer component includes comprehensive accessibility features:
+
+### ARIA Attributes
+```tsx
+<input
+  aria-label="Your answer"
+  aria-invalid={hasErrors}
+  aria-describedby="error-sa-1"
+  role="textbox"
+/>
+```
+
+### Keyboard Navigation
+
+- **Tab**: Navigate to/from input
+- **Shift+Tab**: Navigate backwards
+- **Enter**: Submit/check (if check button enabled)
+- **Escape**: Clear input (custom behavior)
+
+### Screen Reader Support
+
+- Error messages are announced via `role="alert"`
+- Validation feedback uses `role="status"`
+- Character count updates are announced
+- Hints are properly labeled
+
+## TypeScript
+
+Full TypeScript support with strict typing:
+```tsx
+import { ShortAnswer } from '@scinforma/picolms';
+import type {
+  ShortAnswerConfig,
+  ShortAnswerAnswer,
+  ShortAnswerProps,
+  QuestionAnswer,
+  ContentRenderer,
+  ValidationResult,
+} from '@scinforma/picolms';
+
+const config: ShortAnswerConfig = {
+  id: 'sa-1',
+  type: 'short-answer',
+  question: 'What is your answer?',
+  points: 10,
+  correctAnswers: ['answer'],
+};
+
+const answer: ShortAnswerAnswer = 'answer';
+
+const handleChange = (answer: QuestionAnswer<ShortAnswerAnswer>) => {
+  const text: string = answer.value;
+  console.log(text.length);
+};
+
+const props: ShortAnswerProps = {
+  config,
+  onAnswerChange: handleChange,
+};
+```
+
+## Best Practices
+
+1. **Set Appropriate Limits**: Use realistic character limits based on expected answers
+2. **Provide Clear Placeholders**: Show examples of expected format
+3. **Use Pattern Validation**: Validate structured inputs (emails, phone numbers, etc.)
+4. **Accept Variations**: Include multiple correct answers for flexibility
+5. **Consider Case Sensitivity**: Use case-insensitive matching when appropriate
+6. **Enable Trimming**: Remove accidental whitespace with `trimWhitespace`
+7. **Show Character Count**: Help users stay within limits
+8. **Provide Hints**: Guide struggling students with progressive hints
+9. **Validate on Blur**: Show validation feedback after user finishes typing
+10. **Test Patterns**: Thoroughly test regex patterns before deployment
+
+## Common Patterns
+
+### Answer Comparison Helper
+```tsx
+function compareAnswers(
+  userAnswer: string,
+  correctAnswers: string[],
+  caseSensitive: boolean = false,
+  trimWhitespace: boolean = true
+): boolean {
+  let answer = userAnswer;
+  
+  if (trimWhitespace) {
+    answer = answer.trim();
+  }
+  
+  return correctAnswers.some(correct => {
+    if (caseSensitive) {
+      return answer === correct;
+    }
+    return answer.toLowerCase() === correct.toLowerCase();
+  });
+}
+```
+
+### Character Counter
+```tsx
+function CharacterCounter({ 
+  current, 
+  max, 
+  min 
+}: { 
+  current: number; 
+  max?: number; 
+  min?: number; 
+}) {
+  const isOverMax = max && current > max;
+  const isUnderMin = min && current < min;
+  
+  return (
+    <div className={`character-counter ${isOverMax || isUnderMin ? 'warning' : ''}`}>
+      {current}
+      {max && ` / ${max}`}
+      {min && !max && ` (min: ${min})`}
+    </div>
+  );
+}
+```
+
+### Pattern Validation Examples
+```tsx
+// Common regex patterns
+const patterns = {
+  email: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+  phone: '^\\(?([0-9]{3})\\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$',
+  zipCode: '^[0-9]{5}(?:-[0-9]{4})?$',
+  url: '^https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b',
+  alphanumeric: '^[a-zA-Z0-9]+$',
+  integer: '^-?[0-9]+$',
+  decimal: '^-?[0-9]+(\\.[0-9]+)?$',
+  chemical: '^[A-Z][a-z]?[0-9]*([A-Z][a-z]?[0-9]*)*$',
+};
+```
+
+### Real-time Validation
+```tsx
+function ShortAnswerWithRealTimeValidation() {
+  const [isValid, setIsValid] = useState(false);
+
+  const handleChange = (answer: QuestionAnswer<string>) => {
+    // Check pattern in real-time
+    const pattern = /^[0-9]+$/;
+    setIsValid(pattern.test(answer.value));
+  };
+
+  return (
+    <div>
+      <ShortAnswer 
+        config={config} 
+        onAnswerChange={handleChange}
+      />
+      {isValid ? (
+        <span className="text-green-600">✓ Valid format</span>
+      ) : (
+        <span className="text-red-600">✗ Invalid format</span>
+      )}
+    </div>
+  );
+}
+```
+
+## Related Components
+
+- **BaseQuestion**: Base component for all questions
+- **Essay**: For extended text responses
+- **MultipleChoice**: For selection-based questions
+- **FillInBlank**: For multiple short answers
+
+## Related Hooks
+
+- **useQuestionState**: Manage question state
+- **useQuestionContext**: Access question context
+- **useShortAnswerValidation**: Enhanced validation (used internally)
+
+## Notes
+
+- Enhanced validation is automatically applied based on config properties
+- Whitespace trimming happens on change, not on submission
+- Character count includes all characters (including spaces)
+- Maximum length is enforced by the HTML `maxLength` attribute
+- Pattern validation uses HTML5 pattern attribute for basic validation
+- Custom validation rules provide more complex validation logic
+- Check button only appears when `showCheckButton` prop is true
+- Validation on blur requires `validateOnBlur: true` in validation config
+- Multiple correct answers are compared after applying case sensitivity and trimming rules

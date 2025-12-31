@@ -1,0 +1,1164 @@
+---
+id: matching-component
+title: Matching Component
+sidebar_label: Matching
+---
+
+# &lt;Matching/&gt;
+
+A React component for matching questions where users pair items from two columns by creating associations between them.
+
+## Overview
+
+The `Matching` component provides:
+
+- **Two-Column Layout**: Left items paired with right items
+- **Dropdown Selection**: Select matches via dropdown menus
+- **Visual Feedback**: See matched pairs with preview and indicators
+- **Randomization**: Optional shuffling of left and/or right columns
+- **Media Support**: Images can be attached to individual items
+- **Used Item Tracking**: Visual indication of which items have been matched
+- **Clear Functionality**: Remove incorrect matches easily
+- **Seeded Randomization**: Consistent shuffle order for fair assessment
+- **Accessibility**: Full ARIA support and keyboard navigation
+- **Validation**: Built-in validation with custom rules
+- **Feedback System**: Hints, validation messages, and grading feedback
+
+## Import
+```tsx
+import { Matching } from '@scinforma/picolms';
+import type { MatchingConfig, MatchingAnswer } from '@scinforma/picolms';
+```
+
+## Basic Usage
+```tsx
+import { Matching } from '@scinforma/picolms';
+
+const matchingConfig: MatchingConfig = {
+  id: 'match-1',
+  type: 'matching',
+  question: 'Match each country with its capital',
+  points: 15,
+  pairs: [
+    { id: 'pair-1', left: 'France', right: 'Paris' },
+    { id: 'pair-2', left: 'Germany', right: 'Berlin' },
+    { id: 'pair-3', left: 'Italy', right: 'Rome' },
+    { id: 'pair-4', left: 'Spain', right: 'Madrid' },
+  ],
+};
+
+function MyQuiz() {
+  return <Matching config={matchingConfig} />;
+}
+```
+
+## Props
+
+### `MatchingProps`
+```typescript
+interface MatchingProps extends Omit<BaseQuestionProps<MatchingAnswer>, 'config'> {
+  config: MatchingConfig;
+  renderContent?: ContentRenderer;
+}
+```
+
+#### Configuration Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `config` | `MatchingConfig` | Yes | Matching question configuration |
+| `renderContent` | `ContentRenderer` | No | Custom content renderer for Markdown/HTML |
+| `initialAnswer` | `MatchingAnswer` | No | Initial answer value (object mapping IDs) |
+| `onAnswerChange` | `(answer: QuestionAnswer<MatchingAnswer>) => void` | No | Callback when answer changes |
+| `onValidate` | `(result: ValidationResult) => void` | No | Callback when validation runs |
+| `autoSave` | `boolean` | No | Enable automatic saving |
+| `autoSaveDelay` | `number` | No | Auto-save delay in milliseconds |
+
+### `MatchingConfig`
+
+**Key Properties:**
+```typescript
+interface MatchingConfig extends BaseQuestionConfig {
+  type: 'matching';
+  pairs: MatchingPair[];
+  randomizeLeft?: boolean;
+  randomizeRight?: boolean;
+}
+
+interface MatchingPair {
+  id: string;
+  left: string;
+  right: string;
+  leftMedia?: MediaAttachment;
+  rightMedia?: MediaAttachment;
+}
+```
+
+### `MatchingAnswer`
+```typescript
+type MatchingAnswer = Record<string, string>;
+```
+
+A map of left item IDs to right item IDs.
+
+**Example:**
+```typescript
+const answer: MatchingAnswer = {
+  'pair-1': 'pair-1', // France -> Paris
+  'pair-2': 'pair-2', // Germany -> Berlin
+  'pair-3': 'pair-3', // Italy -> Rome
+};
+```
+
+## Examples
+
+### Basic Matching Question
+```tsx
+import { Matching } from '@scinforma/picolms';
+
+const basicConfig: MatchingConfig = {
+  id: 'match-basic',
+  type: 'matching',
+  question: 'Match each element with its chemical symbol',
+  points: 10,
+  pairs: [
+    { id: 'pair-1', left: 'Hydrogen', right: 'H' },
+    { id: 'pair-2', left: 'Oxygen', right: 'O' },
+    { id: 'pair-3', left: 'Carbon', right: 'C' },
+    { id: 'pair-4', left: 'Nitrogen', right: 'N' },
+  ],
+};
+
+function BasicMatching() {
+  return <Matching config={basicConfig} />;
+}
+```
+
+### With Randomization
+```tsx
+const randomizedConfig: MatchingConfig = {
+  id: 'match-random',
+  type: 'matching',
+  question: 'Match each term with its definition',
+  points: 20,
+  pairs: [
+    { 
+      id: 'pair-1', 
+      left: 'Photosynthesis', 
+      right: 'Process by which plants convert light to energy' 
+    },
+    { 
+      id: 'pair-2', 
+      left: 'Respiration', 
+      right: 'Process of breaking down glucose for energy' 
+    },
+    { 
+      id: 'pair-3', 
+      left: 'Mitosis', 
+      right: 'Cell division resulting in two identical cells' 
+    },
+    { 
+      id: 'pair-4', 
+      left: 'Meiosis', 
+      right: 'Cell division resulting in four gametes' 
+    },
+  ],
+  randomizeLeft: false,  // Keep terms in order
+  randomizeRight: true,  // Shuffle definitions
+};
+
+function RandomizedMatching() {
+  return <Matching config={randomizedConfig} />;
+}
+```
+
+### With Media Attachments
+```tsx
+const withMediaConfig: MatchingConfig = {
+  id: 'match-media',
+  type: 'matching',
+  question: 'Match each flag with its country',
+  points: 25,
+  pairs: [
+    {
+      id: 'pair-1',
+      left: 'Flag A',
+      right: 'France',
+      leftMedia: {
+        id: 'flag-fr',
+        type: 'image',
+        url: '/flags/france.png',
+        alt: 'French flag',
+      },
+    },
+    {
+      id: 'pair-2',
+      left: 'Flag B',
+      right: 'Germany',
+      leftMedia: {
+        id: 'flag-de',
+        type: 'image',
+        url: '/flags/germany.png',
+        alt: 'German flag',
+      },
+    },
+    {
+      id: 'pair-3',
+      left: 'Flag C',
+      right: 'Italy',
+      leftMedia: {
+        id: 'flag-it',
+        type: 'image',
+        url: '/flags/italy.png',
+        alt: 'Italian flag',
+      },
+    },
+  ],
+  randomizeRight: true,
+};
+
+function MatchingWithMedia() {
+  return <Matching config={withMediaConfig} />;
+}
+```
+
+### With Custom Content Renderer (Markdown)
+```tsx
+import { Matching } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content, context) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const markdownConfig: MatchingConfig = {
+  id: 'match-markdown',
+  type: 'matching',
+  question: `
+# Scientific Laws
+
+Match each **scientific law** with its _description_.
+  `,
+  instructions: 'Select the correct description for each law from the dropdown.',
+  points: 30,
+  pairs: [
+    {
+      id: 'pair-1',
+      left: '**Newton\'s First Law**',
+      right: 'An object at rest stays at rest unless acted upon by a _force_',
+    },
+    {
+      id: 'pair-2',
+      left: '**Newton\'s Second Law**',
+      right: 'Force equals mass times _acceleration_ (F = ma)',
+    },
+    {
+      id: 'pair-3',
+      left: '**Newton\'s Third Law**',
+      right: 'For every action, there is an equal and opposite _reaction_',
+    },
+  ],
+  randomizeRight: true,
+};
+
+function MarkdownMatching() {
+  return (
+    <Matching 
+      config={markdownConfig} 
+      renderContent={markdownRenderer}
+    />
+  );
+}
+```
+
+### Historical Matching
+```tsx
+const historyConfig: MatchingConfig = {
+  id: 'match-history',
+  type: 'matching',
+  question: 'Match each historical figure with their major accomplishment',
+  points: 25,
+  pairs: [
+    {
+      id: 'pair-1',
+      left: 'Albert Einstein',
+      right: 'Theory of Relativity',
+    },
+    {
+      id: 'pair-2',
+      left: 'Marie Curie',
+      right: 'Research on radioactivity',
+    },
+    {
+      id: 'pair-3',
+      left: 'Isaac Newton',
+      right: 'Laws of Motion and Universal Gravitation',
+    },
+    {
+      id: 'pair-4',
+      left: 'Charles Darwin',
+      right: 'Theory of Evolution by Natural Selection',
+    },
+    {
+      id: 'pair-5',
+      left: 'Galileo Galilei',
+      right: 'Improvements to the telescope and astronomical observations',
+    },
+  ],
+  randomizeLeft: true,
+  randomizeRight: true,
+};
+
+function HistoricalMatching() {
+  return <Matching config={historyConfig} />;
+}
+```
+
+### With Hints
+```tsx
+const withHintsConfig: MatchingConfig = {
+  id: 'match-hints',
+  type: 'matching',
+  question: 'Match each programming language with its primary use case',
+  points: 20,
+  pairs: [
+    { id: 'pair-1', left: 'Python', right: 'Data Science and Machine Learning' },
+    { id: 'pair-2', left: 'JavaScript', right: 'Web Development (Frontend)' },
+    { id: 'pair-3', left: 'SQL', right: 'Database Queries' },
+    { id: 'pair-4', left: 'Swift', right: 'iOS App Development' },
+  ],
+  feedback: {
+    hints: [
+      'Think about what each language is most commonly used for.',
+      'Python is popular in scientific computing.',
+      'JavaScript runs in web browsers.',
+      'SQL is designed for database operations.',
+    ],
+  },
+  randomizeRight: true,
+};
+
+function MatchingWithHints() {
+  return <Matching config={withHintsConfig} />;
+}
+```
+
+### With Answer Change Callback
+```tsx
+import { useState } from 'react';
+import { Matching } from '@scinforma/picolms';
+import type { QuestionAnswer, MatchingAnswer } from '@scinforma/picolms';
+
+function MatchingWithCallback() {
+  const [matchedCount, setMatchedCount] = useState(0);
+
+  const handleAnswerChange = (answer: QuestionAnswer<MatchingAnswer>) => {
+    const count = Object.keys(answer.value).length;
+    setMatchedCount(count);
+    
+    console.log('Matches:', answer.value);
+    console.log('Matched count:', count);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Save to backend
+    saveToBackend(answer);
+  };
+
+  return (
+    <div>
+      <Matching 
+        config={matchingConfig} 
+        onAnswerChange={handleAnswerChange}
+      />
+      <p className="text-sm text-gray-600">
+        {matchedCount} of 4 items matched
+      </p>
+    </div>
+  );
+}
+```
+
+### With Auto-Save
+```tsx
+const autoSaveConfig: MatchingConfig = {
+  id: 'match-autosave',
+  type: 'matching',
+  question: 'Match the terms',
+  points: 15,
+  pairs: [
+    { id: 'pair-1', left: 'Term A', right: 'Definition A' },
+    { id: 'pair-2', left: 'Term B', right: 'Definition B' },
+    { id: 'pair-3', left: 'Term C', right: 'Definition C' },
+  ],
+};
+
+function AutoSaveMatching() {
+  const handleAnswerChange = async (answer: QuestionAnswer<MatchingAnswer>) => {
+    await fetch('/api/save-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(answer),
+    });
+  };
+
+  return (
+    <Matching 
+      config={autoSaveConfig}
+      autoSave={true}
+      autoSaveDelay={2000}
+      onAnswerChange={handleAnswerChange}
+    />
+  );
+}
+```
+
+### Controlled Component
+```tsx
+import { useState } from 'react';
+
+function ControlledMatching() {
+  const [matches, setMatches] = useState<MatchingAnswer>({});
+
+  const handleChange = (answer: QuestionAnswer<MatchingAnswer>) => {
+    setMatches(answer.value);
+  };
+
+  const handleReset = () => {
+    setMatches({});
+  };
+
+  const handleAutoMatch = () => {
+    // Auto-match all pairs correctly
+    const correctMatches: MatchingAnswer = {};
+    matchingConfig.pairs.forEach(pair => {
+      correctMatches[pair.id] = pair.id;
+    });
+    setMatches(correctMatches);
+  };
+
+  return (
+    <div>
+      <Matching 
+        config={matchingConfig}
+        initialAnswer={matches}
+        onAnswerChange={handleChange}
+      />
+      <div className="controls">
+        <button onClick={handleReset}>Reset All</button>
+        <button onClick={handleAutoMatch}>Auto-Match (Cheat)</button>
+      </div>
+      <div className="preview">
+        <h4>Current Matches:</h4>
+        <pre>{JSON.stringify(matches, null, 2)}</pre>
+      </div>
+    </div>
+  );
+}
+```
+
+### With Validation
+```tsx
+const validatedConfig: MatchingConfig = {
+  id: 'match-validated',
+  type: 'matching',
+  question: 'Match all items correctly',
+  points: 20,
+  pairs: [
+    { id: 'pair-1', left: 'A', right: '1' },
+    { id: 'pair-2', left: 'B', right: '2' },
+    { id: 'pair-3', left: 'C', right: '3' },
+  ],
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'All items must be matched',
+      },
+      {
+        type: 'custom',
+        message: 'You must match all items before submitting',
+        validate: (value: MatchingAnswer) => {
+          const totalPairs = 3; // Based on config.pairs.length
+          return Object.keys(value).length === totalPairs;
+        },
+      },
+    ],
+    validateOnBlur: true,
+  },
+};
+
+function ValidatedMatching() {
+  return <Matching config={validatedConfig} />;
+}
+```
+
+### Complete Example
+```tsx
+import { Matching } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer, QuestionAnswer, ValidationResult, MatchingAnswer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const completeConfig: MatchingConfig = {
+  id: 'match-complete',
+  type: 'matching',
+  title: 'Cellular Biology Matching',
+  question: `
+# Cell Organelles
+
+Match each **organelle** with its _primary function_.
+  `,
+  instructions: 'Select the correct function for each organelle from the dropdown menu.',
+  points: 30,
+  required: true,
+  difficulty: 'intermediate',
+  tags: ['biology', 'cells', 'organelles'],
+  category: 'Cell Biology',
+  
+  // Matching pairs
+  pairs: [
+    {
+      id: 'pair-1',
+      left: '**Nucleus**',
+      right: 'Contains genetic material and controls cell activities',
+    },
+    {
+      id: 'pair-2',
+      left: '**Mitochondria**',
+      right: 'Produces ATP through cellular respiration',
+    },
+    {
+      id: 'pair-3',
+      left: '**Chloroplast**',
+      right: 'Performs photosynthesis in plant cells',
+    },
+    {
+      id: 'pair-4',
+      left: '**Ribosome**',
+      right: 'Synthesizes proteins from amino acids',
+    },
+    {
+      id: 'pair-5',
+      left: '**Golgi Apparatus**',
+      right: 'Modifies and packages proteins for transport',
+    },
+    {
+      id: 'pair-6',
+      left: '**Endoplasmic Reticulum**',
+      right: 'Synthesizes lipids and processes proteins',
+    },
+  ],
+  
+  // Randomization
+  randomizeLeft: false,  // Keep organelle names in order
+  randomizeRight: true,  // Shuffle functions
+  
+  // Time limit: 5 minutes
+  timeLimit: 300,
+  
+  // Attempts
+  maxAttempts: 3,
+  
+  // Media
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/cell-diagram.png',
+      alt: 'Diagram of a eukaryotic cell',
+      caption: 'Figure 1: Eukaryotic cell structure',
+    },
+  ],
+  
+  // Validation
+  validation: {
+    rules: [
+      {
+        type: 'required',
+        message: 'Please match all organelles',
+      },
+      {
+        type: 'custom',
+        message: 'You must match all 6 organelles before submitting',
+        validate: (value: MatchingAnswer) => {
+          return Object.keys(value).length === 6;
+        },
+      },
+    ],
+    validateOnBlur: true,
+  },
+  
+  // Feedback
+  feedback: {
+    hints: [
+      'Think about what each organelle looks like under a microscope.',
+      'The mitochondria is often called the "powerhouse of the cell".',
+      'Only plant cells have chloroplasts.',
+      'The nucleus is the control center of the cell.',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Excellent! You correctly matched all organelles with their functions.',
+      showAfter: 'submission',
+    },
+    partial: {
+      type: 'partial',
+      message: 'Good effort! Review the organelles you missed.',
+      showAfter: 'submission',
+    },
+  },
+  
+  // Accessibility
+  accessibility: {
+    ariaLabel: 'Matching question about cell organelles and their functions',
+    screenReaderText: 'For each organelle listed, select its function from the dropdown menu.',
+    keyboardShortcuts: {
+      'Tab': 'Navigate between dropdowns',
+      'Enter': 'Open dropdown',
+      'Escape': 'Close dropdown',
+    },
+  },
+  
+  // Metadata
+  metadata: {
+    createdAt: '2024-01-15T10:00:00Z',
+    createdBy: 'instructor-123',
+    tags: ['biology', 'cell-structure', 'organelles'],
+    subject: 'Biology',
+    gradeLevel: '9-10',
+    bloomsLevel: 'Understand',
+  },
+};
+
+function CompleteMatching() {
+  const [progress, setProgress] = useState(0);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  const handleAnswerChange = async (answer: QuestionAnswer<MatchingAnswer>) => {
+    const matchedCount = Object.keys(answer.value).length;
+    const totalPairs = completeConfig.pairs.length;
+    setProgress((matchedCount / totalPairs) * 100);
+    
+    console.log(`Matched: ${matchedCount}/${totalPairs}`);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Auto-save
+    await saveToBackend(answer);
+    setLastSaved(new Date());
+  };
+
+  const handleValidate = (result: ValidationResult) => {
+    if (!result.isValid) {
+      console.log('Validation errors:', result.errors);
+    }
+  };
+
+  return (
+    <div>
+      <div className="progress-bar">
+        <div style={{ width: `${progress}%` }} className="progress-fill" />
+      </div>
+      
+      <Matching
+        config={completeConfig}
+        renderContent={markdownRenderer}
+        onAnswerChange={handleAnswerChange}
+        onValidate={handleValidate}
+        autoSave={true}
+        autoSaveDelay={2000}
+      />
+      
+      {lastSaved && (
+        <p className="text-sm text-gray-500">
+          Last saved: {lastSaved.toLocaleTimeString()}
+        </p>
+      )}
+      
+      <p className="text-sm text-gray-600">
+        Progress: {progress.toFixed(0)}% complete
+      </p>
+    </div>
+  );
+}
+```
+
+## Features
+
+### Seeded Randomization
+
+The component uses deterministic shuffling based on the question ID:
+```tsx
+// Same question ID always produces same shuffle order
+// Fair for all students taking the same assessment
+const seed = config.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+```
+
+### Used Item Tracking
+
+Visual indicators show which right-side items have been matched:
+```tsx
+// Matched items show checkmark
+// Unmatched items remain available
+// Prevents accidental duplicate matches
+```
+
+### Clear Functionality
+
+Remove incorrect matches easily:
+```tsx
+// "✕" button appears next to each matched pair
+// Click to clear and try a different match
+```
+
+### Dropdown Selection
+
+Intuitive dropdown-based matching:
+```tsx
+// Select from available options
+// Used options are disabled (grayed out)
+// Current selection is highlighted
+```
+
+### Match Preview
+
+See matched pairs inline:
+```tsx
+// Shows: "France → Paris"
+// Provides immediate visual confirmation
+```
+
+## Styling
+
+### CSS Classes
+
+The component uses the following CSS classes:
+```css
+/* Container */
+.picolms-matching-question { }
+
+/* Header */
+.picolms-question-header { }
+.picolms-question-title { }
+.picolms-question-text { }
+.picolms-question-instructions { }
+
+/* Media */
+.picolms-question-media { }
+.picolms-media-item { }
+.picolms-media-caption { }
+
+/* Matching Layout */
+.picolms-matching-container { }
+.matching-left-column { }
+.matching-right-column { }
+.picolms-matching-column-header { }
+
+/* Left Items */
+.picolms-matching-left-item { }
+.picolms-matching-item-content { }
+.picolms-matching-item-image { }
+.matching-item-text { }
+.picolms-matching-controls { }
+.picolms-matching-select { }
+.picolms-matching-clear-button { }
+.picolms-matching-preview { }
+
+/* Right Items */
+.picolms-matching-right-item { }
+.matching-right-item-used { }
+.picolms-matching-used-indicator { }
+
+/* Validation */
+.picolms-question-errors { }
+.picolms-error-message { }
+
+/* Feedback */
+.picolms-question-feedback { }
+.feedback-correct { }
+.feedback-incorrect { }
+.feedback-partial { }
+
+/* Hints */
+.picolms-question-hints { }
+.picolms-hint-text { }
+
+/* Metadata */
+.picolms-question-meta { }
+.picolms-question-points { }
+.picolms-question-difficulty { }
+```
+
+### Example Styles
+```css
+.picolms-matching-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 768px) {
+  .picolms-matching-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.matching-left-column,
+.matching-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.picolms-matching-column-header {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+.picolms-matching-left-item {
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: white;
+}
+
+.picolms-matching-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.picolms-matching-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 0.375rem;
+}
+
+.picolms-matching-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.picolms-matching-select {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.picolms-matching-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.picolms-matching-select:disabled {
+  background-color: #f9fafb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.picolms-matching-clear-button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1.25rem;
+  color: #ef4444;
+  background-color: white;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.picolms-matching-clear-button:hover {
+  background-color: #fee2e2;
+  border-color: #ef4444;
+}
+
+.picolms-matching-preview {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: #059669;
+  background-color: #d1fae5;
+  border-left: 3px solid #10b981;
+  border-radius: 0.25rem;
+}
+
+.picolms-matching-right-item {
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: white;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.matching-right-item-used {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+}
+
+.picolms-matching-used-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  background-color: #10b981;
+  border-radius: 50%;
+}
+```
+
+## Accessibility
+
+The Matching component includes comprehensive accessibility features:
+
+### ARIA Attributes
+```tsx
+<select
+  aria-label="Select match for France"
+  role="combobox"
+/>
+```
+
+### Keyboard Navigation
+
+- **Tab**: Navigate between dropdowns
+- **Shift+Tab**: Navigate backwards
+- **Enter/Space**: Open dropdown
+- **Arrow Keys**: Navigate dropdown options
+- **Escape**: Close dropdown
+
+### Screen Reader Support
+
+- Each dropdown is labeled with the left item text
+- Used options are announced as disabled
+- Match preview is announced when selection changes
+- Error messages are announced via `role="alert"`
+
+## TypeScript
+
+Full TypeScript support with strict typing:
+```tsx
+import { Matching } from '@scinforma/picolms';
+import type {
+  MatchingConfig,
+  MatchingAnswer,
+  MatchingPair,
+  MatchingProps,
+  QuestionAnswer,
+  ContentRenderer,
+} from '@scinforma/picolms';
+
+const config: MatchingConfig = {
+  id: 'match-1',
+  type: 'matching',
+  question: 'Match the items',
+  points: 15,
+  pairs: [
+    { id: 'pair-1', left: 'A', right: '1' },
+    { id: 'pair-2', left: 'B', right: '2' },
+  ],
+};
+
+const answer: MatchingAnswer = {
+  'pair-1': 'pair-1',
+  'pair-2': 'pair-2',
+};
+
+const handleChange = (answer: QuestionAnswer<MatchingAnswer>) => {
+  const matches: Record<string, string> = answer.value;
+  console.log(Object.keys(matches).length); // Number of matches
+};
+
+const props: MatchingProps = {
+  config,
+  onAnswerChange: handleChange,
+};
+```
+
+## Best Practices
+
+1. **Provide Clear Items**: Make left and right items clear and unambiguous
+2. **Balance Difficulty**: Ensure items aren't too obvious or too obscure
+3. **Use Randomization**: Shuffle right column to prevent answer pattern memorization
+4. **Limit Pairs**: Keep to 5-10 pairs for optimal usability
+5. **Consider Order**: Keep left items in a logical order (don't randomize if order matters)
+6. **Add Media Wisely**: Use images when they aid identification
+7. **Test Thoroughly**: Verify all correct matches are properly configured
+8. **Provide Hints**: Help struggling students with progressive hints
+9. **Validate Completion**: Ensure all items are matched before submission
+10. **Use Clear Language**: Avoid ambiguous terms that could match multiple items
+
+## Common Patterns
+
+### Progress Tracking
+```tsx
+function MatchingWithProgress() {
+  const [progress, setProgress] = useState(0);
+
+  const handleChange = (answer: QuestionAnswer<MatchingAnswer>) => {
+    const totalPairs = matchingConfig.pairs.length;
+    const matchedCount = Object.keys(answer.value).length;
+    setProgress((matchedCount / totalPairs) * 100);
+  };
+
+  return (
+    <div>
+      <div className="progress-bar">
+        <div style={{ width: `${progress}%` }} />
+      </div>
+      <p>{progress.toFixed(0)}% Complete</p>
+      <Matching config={config} onAnswerChange={handleChange} />
+    </div>
+  );
+}
+```
+
+### Answer Validation Helper
+```tsx
+function validateMatchingAnswer(
+  answer: MatchingAnswer,
+  config: MatchingConfig
+): { correct: number; total: number; percentage: number } {
+  let correct = 0;
+  const total = config.pairs.length;
+  
+  config.pairs.forEach(pair => {
+    if (answer[pair.id] === pair.id) {
+      correct++;
+    }
+  });
+  
+  return {
+    correct,
+    total,
+    percentage: (correct / total) * 100,
+  };
+}
+```
+
+### Shuffle Helper Functions
+```tsx
+// Fisher-Yates shuffle
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Seeded shuffle (deterministic)
+function seededShuffle<T>(array: T[], seed: number): T[] {
+  const shuffled = [...array];
+  const random = seededRandom(seed);
+  
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  return shuffled;
+}
+
+function seededRandom(seed: number) {
+  return function() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+}
+```
+
+### Match Counter
+```tsx
+function countMatches(answer: MatchingAnswer): number {
+  return Object.keys(answer).length;
+}
+
+function countCorrectMatches(
+  answer: MatchingAnswer,
+  config: MatchingConfig
+): number {
+  return config.pairs.filter(pair => answer[pair.id] === pair.id).length;
+}
+
+function MatchCounter({ answer, config }: {
+  answer: MatchingAnswer;
+  config: MatchingConfig;
+}) {
+  const matched = countMatches(answer);
+  const total = config.pairs.length;
+  const correct = countCorrectMatches(answer, config);
+  
+  return (
+    <div className="match-counter">
+      <p>Matched: {matched} / {total}</p>
+      {matched === total && <p>Correct: {correct} / {total}</p>}
+    </div>
+  );
+}
+```
+
+### Find Unmatched Items
+```tsx
+function findUnmatchedItems(
+  answer: MatchingAnswer,
+  config: MatchingConfig
+): string[] {
+  return config.pairs
+    .filter(pair => !answer[pair.id])
+    .map(pair => pair.left);
+}
+```
+
+## Related Components
+
+- **BaseQuestion**: Base component for all questions
+- **MultipleChoice**: For option selection questions
+- **FillInBlank**: For multiple text inputs
+- **Ordering**: For sequencing items (future)
+
+## Related Hooks
+
+- **useQuestionState**: Manage question state
+- **useQuestionContext**: Access question context
+
+## Notes
+
+- Randomization uses seeded shuffle for consistent ordering per question ID
+- Left column items can have `randomizeLeft: true` to shuffle
+- Right column items default to `randomizeRight: true` for fairness
+- Dropdown prevents selecting already-used options (except current selection)
+- Clear button (✕) only appears when item is matched and not locked
+- Used items in right column show checkmark indicator
+- Match preview shows selected pairing inline
+- Media can be attached to either left or right items separately
+- Answer is stored as a map of left IDs to right IDs
+- Component automatically tracks which right items are used
+- Validation can ensure all items are matched before submission

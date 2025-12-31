@@ -1,0 +1,1054 @@
+---
+id: true-false-component
+title: True or False Component
+sidebar_label: TrueOrFalse
+---
+
+# &lt;TrueOrFalse/&gt;
+
+A React component for binary true/false questions with multiple display styles including radio buttons, toggle buttons, and switches.
+
+## Overview
+
+The `TrueOrFalse` component provides:
+
+- **Multiple Display Styles**: Radio buttons, action buttons, or toggle switch
+- **Binary Selection**: Simple true/false choice
+- **Auto-Grading**: Built-in correct answer checking
+- **Enhanced Validation**: Automatic validation via custom hook
+- **Check Button**: Optional instant feedback button
+- **Accessibility**: Full ARIA support with proper roles and labels
+- **Media Support**: Attach images, videos, and documents
+- **Feedback System**: Hints, validation messages, and grading feedback
+- **Locked State**: Disable interaction after submission
+
+## Import
+```tsx
+import { TrueOrFalse } from '@scinforma/picolms';
+import type { TrueOrFalseConfig, TrueOrFalseAnswer } from '@scinforma/picolms';
+```
+
+## Basic Usage
+```tsx
+import { TrueOrFalse } from '@scinforma/picolms';
+
+const trueOrFalseConfig: TrueOrFalseConfig = {
+  id: 'tf-1',
+  type: 'true-false',
+  question: 'The Earth revolves around the Sun.',
+  points: 2,
+  correctAnswer: true,
+};
+
+function MyQuiz() {
+  return <TrueOrFalse config={trueOrFalseConfig} />;
+}
+```
+
+## Props
+
+### `TrueOrFalseProps`
+```typescript
+interface TrueOrFalseProps extends Omit<BaseQuestionProps<TrueOrFalseAnswer>, 'config'> {
+  config: TrueOrFalseConfig;
+  renderContent?: ContentRenderer;
+  children?: ReactNode;
+}
+```
+
+#### Configuration Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `config` | `TrueOrFalseConfig` | Yes | True/false question configuration |
+| `renderContent` | `ContentRenderer` | No | Custom content renderer for Markdown/HTML |
+| `children` | `ReactNode` | No | Additional child elements to render |
+| `initialAnswer` | `TrueOrFalseAnswer` | No | Initial answer value (boolean) |
+| `onAnswerChange` | `(answer: QuestionAnswer<TrueOrFalseAnswer>) => void` | No | Callback when answer changes |
+| `onValidate` | `(result: ValidationResult) => void` | No | Callback when validation runs |
+| `autoSave` | `boolean` | No | Enable automatic saving |
+| `autoSaveDelay` | `number` | No | Auto-save delay in milliseconds |
+
+### `TrueOrFalseConfig`
+
+**Key Properties:**
+```typescript
+interface TrueOrFalseConfig extends BaseQuestionConfig {
+  type: 'true-false';
+  correctAnswer: boolean;
+  displayAs?: 'radio' | 'buttons' | 'toggle';
+}
+```
+
+### `TrueOrFalseAnswer`
+```typescript
+type TrueOrFalseAnswer = boolean;
+```
+
+The answer is a simple boolean value (`true` or `false`).
+
+## Examples
+
+### Basic True/False Question
+```tsx
+import { TrueOrFalse } from '@scinforma/picolms';
+
+const basicConfig: TrueOrFalseConfig = {
+  id: 'tf-basic',
+  type: 'true-false',
+  question: 'Water boils at 100°C at sea level.',
+  points: 2,
+  correctAnswer: true,
+};
+
+function BasicTrueOrFalse() {
+  return <TrueOrFalse config={basicConfig} />;
+}
+```
+
+### With Radio Buttons (Default)
+```tsx
+const radioConfig: TrueOrFalseConfig = {
+  id: 'tf-radio',
+  type: 'true-false',
+  question: 'The speed of light is constant in all reference frames.',
+  points: 3,
+  correctAnswer: true,
+  displayAs: 'radio', // Default display style
+};
+
+function RadioTrueOrFalse() {
+  return <TrueOrFalse config={radioConfig} />;
+}
+```
+
+### With Action Buttons
+```tsx
+const buttonsConfig: TrueOrFalseConfig = {
+  id: 'tf-buttons',
+  type: 'true-false',
+  question: 'Python is a compiled language.',
+  points: 2,
+  correctAnswer: false,
+  displayAs: 'buttons', // Large clickable buttons
+};
+
+function ButtonsTrueOrFalse() {
+  return <TrueOrFalse config={buttonsConfig} />;
+}
+```
+
+### With Toggle Switch
+```tsx
+const toggleConfig: TrueOrFalseConfig = {
+  id: 'tf-toggle',
+  type: 'true-false',
+  question: 'DNA contains genetic information.',
+  points: 2,
+  correctAnswer: true,
+  displayAs: 'toggle', // iOS-style toggle switch
+};
+
+function ToggleTrueOrFalse() {
+  return <TrueOrFalse config={toggleConfig} />;
+}
+```
+
+### With Custom Content Renderer (Markdown)
+```tsx
+import { TrueOrFalse } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content, context) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const markdownConfig: TrueOrFalseConfig = {
+  id: 'tf-markdown',
+  type: 'true-false',
+  question: `
+**Einstein's Theory of Relativity** states that _E = mc²_.
+
+Is this formula correct?
+  `,
+  points: 5,
+  correctAnswer: true,
+  displayAs: 'buttons',
+};
+
+function MarkdownTrueOrFalse() {
+  return (
+    <TrueOrFalse 
+      config={markdownConfig} 
+      renderContent={markdownRenderer}
+    />
+  );
+}
+```
+
+### With Media
+```tsx
+const withMediaConfig: TrueOrFalseConfig = {
+  id: 'tf-media',
+  type: 'true-false',
+  question: 'The diagram shows a series circuit.',
+  points: 5,
+  correctAnswer: false,
+  displayAs: 'buttons',
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/circuit-diagram.png',
+      alt: 'Electrical circuit diagram',
+      caption: 'Figure 1: Circuit configuration',
+    },
+  ],
+};
+
+function TrueOrFalseWithMedia() {
+  return <TrueOrFalse config={withMediaConfig} />;
+}
+```
+
+### With Instructions and Hints
+```tsx
+const withHintsConfig: TrueOrFalseConfig = {
+  id: 'tf-hints',
+  type: 'true-false',
+  question: 'Photosynthesis occurs in the mitochondria.',
+  instructions: 'Think carefully about which organelle performs photosynthesis.',
+  points: 3,
+  correctAnswer: false,
+  displayAs: 'radio',
+  feedback: {
+    hints: [
+      'Photosynthesis is the process plants use to make food.',
+      'Think about where the green color in plants comes from.',
+      'Photosynthesis occurs in chloroplasts, not mitochondria.',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Correct! Photosynthesis occurs in chloroplasts, not mitochondria.',
+      showAfter: 'immediate',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Incorrect. Photosynthesis occurs in chloroplasts.',
+      showAfter: 'immediate',
+    },
+  },
+};
+
+function TrueOrFalseWithHints() {
+  return <TrueOrFalse config={withHintsConfig} />;
+}
+```
+
+### With Immediate Feedback
+```tsx
+const immediateFeedbackConfig: TrueOrFalseConfig = {
+  id: 'tf-feedback',
+  type: 'true-false',
+  question: 'The atomic number represents the number of protons in an atom.',
+  points: 2,
+  correctAnswer: true,
+  displayAs: 'buttons',
+  feedback: {
+    correct: {
+      type: 'correct',
+      message: 'Excellent! The atomic number equals the number of protons.',
+      showAfter: 'immediate',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Not quite. The atomic number is defined by proton count.',
+      showAfter: 'immediate',
+    },
+  },
+};
+
+function ImmediateFeedbackTrueOrFalse() {
+  return (
+    <TrueOrFalse 
+      config={immediateFeedbackConfig}
+      showCheckButton={true}
+    />
+  );
+}
+```
+
+### With Answer Change Callback
+```tsx
+import { useState } from 'react';
+import { TrueOrFalse } from '@scinforma/picolms';
+import type { QuestionAnswer } from '@scinforma/picolms';
+
+function TrueOrFalseWithCallback() {
+  const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
+
+  const handleAnswerChange = (answer: QuestionAnswer<boolean>) => {
+    setSelectedAnswer(answer.value);
+    
+    console.log('Answer:', answer.value);
+    console.log('Is answered:', answer.isAnswered);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Save to backend
+    saveToBackend(answer);
+  };
+
+  return (
+    <div>
+      <TrueOrFalse 
+        config={trueOrFalseConfig} 
+        onAnswerChange={handleAnswerChange}
+      />
+      {selectedAnswer !== null && (
+        <p className="text-sm text-gray-600">
+          You selected: {selectedAnswer ? 'True' : 'False'}
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+### With Auto-Save
+```tsx
+const autoSaveConfig: TrueOrFalseConfig = {
+  id: 'tf-autosave',
+  type: 'true-false',
+  question: 'The Earth is the third planet from the Sun.',
+  points: 2,
+  correctAnswer: true,
+  displayAs: 'toggle',
+};
+
+function AutoSaveTrueOrFalse() {
+  const handleAnswerChange = async (answer: QuestionAnswer<boolean>) => {
+    await fetch('/api/save-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(answer),
+    });
+  };
+
+  return (
+    <TrueOrFalse 
+      config={autoSaveConfig}
+      autoSave={true}
+      autoSaveDelay={500} // Save 0.5 seconds after selection
+      onAnswerChange={handleAnswerChange}
+    />
+  );
+}
+```
+
+### Controlled Component
+```tsx
+import { useState } from 'react';
+
+function ControlledTrueOrFalse() {
+  const [answer, setAnswer] = useState<boolean | undefined>(undefined);
+
+  const handleChange = (answer: QuestionAnswer<boolean>) => {
+    setAnswer(answer.value);
+  };
+
+  const handleReset = () => {
+    setAnswer(undefined);
+  };
+
+  const handleSetTrue = () => {
+    setAnswer(true);
+  };
+
+  const handleSetFalse = () => {
+    setAnswer(false);
+  };
+
+  return (
+    <div>
+      <TrueOrFalse 
+        config={trueOrFalseConfig}
+        initialAnswer={answer}
+        onAnswerChange={handleChange}
+      />
+      <div className="controls">
+        <button onClick={handleSetTrue}>Set to True</button>
+        <button onClick={handleSetFalse}>Set to False</button>
+        <button onClick={handleReset}>Reset</button>
+      </div>
+      <div className="preview">
+        <p>
+          Current answer: {
+            answer === undefined 
+              ? 'Not answered' 
+              : answer ? 'True' : 'False'
+          }
+        </p>
+      </div>
+    </div>
+  );
+}
+```
+
+### With Accessibility Configuration
+```tsx
+const accessibleConfig: TrueOrFalseConfig = {
+  id: 'tf-a11y',
+  type: 'true-false',
+  question: 'Screen readers announce ARIA labels to users.',
+  points: 2,
+  correctAnswer: true,
+  displayAs: 'buttons',
+  accessibility: {
+    ariaLabel: 'True or false question about ARIA labels',
+    screenReaderText: 'Select either true or false to answer the question.',
+    keyboardShortcuts: {
+      'T': 'Select True',
+      'F': 'Select False',
+      'Enter': 'Submit answer',
+    },
+  },
+};
+
+function AccessibleTrueOrFalse() {
+  return <TrueOrFalse config={accessibleConfig} />;
+}
+```
+
+### With Time Limit
+```tsx
+const timedConfig: TrueOrFalseConfig = {
+  id: 'tf-timed',
+  type: 'true-false',
+  question: 'Quick! Is the Sun a star?',
+  points: 3,
+  correctAnswer: true,
+  displayAs: 'buttons',
+  timeLimit: 10, // 10 seconds to answer
+};
+
+function TimedTrueOrFalse() {
+  return <TrueOrFalse config={timedConfig} />;
+}
+```
+
+### Complete Example
+```tsx
+import { TrueOrFalse } from '@scinforma/picolms';
+import ReactMarkdown from 'react-markdown';
+import type { ContentRenderer, QuestionAnswer, ValidationResult } from '@scinforma/picolms';
+
+const markdownRenderer: ContentRenderer = (content) => {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+};
+
+const completeConfig: TrueOrFalseConfig = {
+  id: 'tf-complete',
+  type: 'true-false',
+  title: 'Physics Fact Check',
+  question: `
+# Newton's First Law
+
+**Statement**: An object at rest will remain at rest, and an object in motion 
+will remain in motion at a constant velocity, unless acted upon by a _net external force_.
+
+Is this statement **correct**?
+  `,
+  instructions: 'Consider the definition of inertia and the role of external forces.',
+  points: 5,
+  required: true,
+  difficulty: 'beginner',
+  tags: ['physics', 'mechanics', 'newton'],
+  category: 'Classical Mechanics',
+  
+  // Correct answer
+  correctAnswer: true,
+  
+  // Display style
+  displayAs: 'buttons',
+  
+  // Time limit: 30 seconds
+  timeLimit: 30,
+  
+  // Attempts
+  maxAttempts: 2,
+  
+  // Media
+  media: [
+    {
+      id: 'img-1',
+      type: 'image',
+      url: '/images/newton-first-law.png',
+      alt: 'Diagram illustrating Newton\'s First Law',
+      caption: 'Figure 1: Newton\'s First Law of Motion',
+    },
+  ],
+  
+  // Feedback
+  feedback: {
+    hints: [
+      'Think about what happens when no force acts on an object.',
+      'Consider the concept of inertia.',
+      'The statement is a correct description of Newton\'s First Law.',
+    ],
+    correct: {
+      type: 'correct',
+      message: 'Correct! This is an accurate statement of Newton\'s First Law of Motion, also known as the law of inertia.',
+      showAfter: 'immediate',
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Incorrect. This statement correctly describes Newton\'s First Law. Review the concept of inertia.',
+      showAfter: 'immediate',
+    },
+  },
+  
+  // Accessibility
+  accessibility: {
+    ariaLabel: 'True or false question about Newton\'s First Law of Motion',
+    ariaDescribedBy: 'tf-instructions',
+    screenReaderText: 'Read the statement carefully and select true if it is correct, or false if it is incorrect.',
+    keyboardShortcuts: {
+      'T': 'Select True',
+      'F': 'Select False',
+      'H': 'Show hints',
+      'Enter': 'Check answer',
+    },
+  },
+  
+  // Metadata
+  metadata: {
+    createdAt: '2024-01-15T10:00:00Z',
+    createdBy: 'instructor-123',
+    tags: ['physics', 'classical-mechanics', 'laws-of-motion'],
+    subject: 'Physics',
+    gradeLevel: '9-10',
+    bloomsLevel: 'Understand',
+  },
+};
+
+function CompleteTrueOrFalse() {
+  const [attempts, setAttempts] = useState(0);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  const handleAnswerChange = async (answer: QuestionAnswer<boolean>) => {
+    console.log('Answer:', answer.value);
+    console.log('Time spent:', answer.timeSpent);
+    
+    // Auto-save
+    await saveToBackend(answer);
+  };
+
+  const handleValidate = (result: ValidationResult) => {
+    if (!result.isValid) {
+      console.log('Validation errors:', result.errors);
+    }
+    
+    setAttempts(prev => prev + 1);
+  };
+
+  return (
+    <div>
+      <TrueOrFalse
+        config={completeConfig}
+        renderContent={markdownRenderer}
+        onAnswerChange={handleAnswerChange}
+        onValidate={handleValidate}
+        showCheckButton={true}
+        autoSave={true}
+        autoSaveDelay={500}
+      />
+      
+      {attempts > 0 && (
+        <p className="text-sm text-gray-600">
+          Attempts: {attempts} / {completeConfig.maxAttempts}
+        </p>
+      )}
+      
+      {isCorrect !== null && (
+        <p className={`text-sm ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+          {isCorrect ? '✓ Correct' : '✗ Incorrect'}
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+## Display Styles
+
+### Radio Buttons (`displayAs: 'radio'`)
+
+Traditional radio button selection (default style):
+```tsx
+const config: TrueOrFalseConfig = {
+  // ...
+  displayAs: 'radio',
+};
+```
+
+**Features:**
+- Standard HTML radio inputs
+- Clear visual distinction between selected/unselected
+- Native browser accessibility
+- Traditional form appearance
+
+### Action Buttons (`displayAs: 'buttons'`)
+
+Large, clickable button-style selection:
+```tsx
+const config: TrueOrFalseConfig = {
+  // ...
+  displayAs: 'buttons',
+};
+```
+
+**Features:**
+- Large touch-friendly targets
+- Modern, app-like interface
+- Clear visual feedback on selection
+- `aria-pressed` attribute for accessibility
+
+### Toggle Switch (`displayAs: 'toggle'`)
+
+iOS-style toggle switch:
+```tsx
+const config: TrueOrFalseConfig = {
+  // ...
+  displayAs: 'toggle',
+};
+```
+
+**Features:**
+- Compact, space-efficient design
+- Shows current state with label
+- Smooth animation
+- `role="switch"` for accessibility
+
+## Features
+
+### Enhanced Validation Hook
+
+The component uses `useTrueOrFalseValidation` hook to automatically enhance validation:
+```tsx
+// Automatically validates that an answer is selected
+```
+
+### Check Button
+
+Enable instant feedback with a check button:
+```tsx
+<TrueOrFalse 
+  config={config}
+  showCheckButton={true} // Shows "Check" button
+/>
+```
+
+### Locked State
+
+Disable interaction after submission:
+```tsx
+// Component automatically locks when status is 'submitted' or 'graded'
+```
+
+### Immediate Feedback
+
+Provide instant feedback on answer selection:
+```tsx
+const config: TrueOrFalseConfig = {
+  // ...
+  feedback: {
+    correct: {
+      type: 'correct',
+      message: 'Correct!',
+      showAfter: 'immediate', // Show immediately
+    },
+    incorrect: {
+      type: 'incorrect',
+      message: 'Incorrect',
+      showAfter: 'immediate',
+    },
+  },
+};
+```
+
+## Styling
+
+### CSS Classes
+
+The component uses the following CSS classes:
+```css
+/* Container */
+.picolms-true-false-question { }
+
+/* Header */
+.picolms-question-header { }
+.picolms-question-title { }
+.picolms-question-text { }
+.picolms-question-instructions { }
+
+/* Media */
+.picolms-question-media { }
+.picolms-media-item { }
+.picolms-media-caption { }
+
+/* Radio Buttons */
+.picolms-tf-options { }
+.picolms-tf-option { }
+.picolms-tf-option-selected { }
+.tf-option-text { }
+
+/* Action Buttons */
+.picolms-tf-buttons { }
+.picolms-tf-button { }
+.picolms-tf-button-selected { }
+
+/* Toggle Switch */
+.picolms-tf-toggle { }
+.picolms-tf-toggle-label { }
+.picolms-tf-toggle-slider { }
+.picolms-tf-toggle-text { }
+
+/* Validation */
+.picolms-question-errors { }
+.picolms-error-message { }
+
+/* Feedback */
+.picolms-question-feedback { }
+.feedback-correct { }
+.feedback-incorrect { }
+
+/* Hints */
+.picolms-question-hints { }
+.picolms-hint-text { }
+
+/* Metadata */
+.picolms-question-meta { }
+.picolms-question-points { }
+.picolms-question-difficulty { }
+
+/* Actions */
+.picolms-question-actions { }
+.picolms-check-button { }
+```
+
+### Example Styles
+```css
+/* Radio Buttons */
+.picolms-tf-options {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.picolms-tf-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.picolms-tf-option:hover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.picolms-tf-option-selected {
+  border-color: #3b82f6;
+  background-color: #dbeafe;
+}
+
+/* Action Buttons */
+.picolms-tf-buttons {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.picolms-tf-button {
+  flex: 1;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  background-color: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.picolms-tf-button:hover:not(:disabled) {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.picolms-tf-button-selected {
+  color: white;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.picolms-tf-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Toggle Switch */
+.picolms-tf-toggle {
+  margin: 1rem 0;
+}
+
+.picolms-tf-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.picolms-tf-toggle-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.picolms-tf-toggle-slider {
+  position: relative;
+  width: 60px;
+  height: 32px;
+  background-color: #cbd5e1;
+  border-radius: 32px;
+  transition: background-color 0.3s;
+}
+
+.picolms-tf-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 4px;
+  top: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+input:checked + .picolms-tf-toggle-slider {
+  background-color: #3b82f6;
+}
+
+input:checked + .picolms-tf-toggle-slider::before {
+  transform: translateX(28px);
+}
+
+.picolms-tf-toggle-text {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+```
+
+## Accessibility
+
+The TrueOrFalse component includes comprehensive accessibility features:
+
+### ARIA Attributes
+```tsx
+// Radio buttons
+<div role="radiogroup" aria-label="True or False">
+  <input type="radio" />
+</div>
+
+// Action buttons
+<button aria-pressed={isSelected}>True</button>
+
+// Toggle switch
+<input role="switch" aria-checked={isTrue} />
+```
+
+### Keyboard Navigation
+
+- **Tab**: Navigate between options
+- **Space/Enter**: Select option (for buttons)
+- **Arrow Keys**: Navigate radio buttons
+- **T/F**: Custom shortcuts (if configured)
+
+### Screen Reader Support
+
+- Proper roles for each display type
+- State announcements (selected, pressed, checked)
+- Error messages announced via `role="alert"`
+- Feedback uses `role="status"`
+
+## TypeScript
+
+Full TypeScript support with strict typing:
+```tsx
+import { TrueOrFalse } from '@scinforma/picolms';
+import type {
+  TrueOrFalseConfig,
+  TrueOrFalseAnswer,
+  TrueOrFalseProps,
+  QuestionAnswer,
+  ContentRenderer,
+  ValidationResult,
+} from '@scinforma/picolms';
+
+const config: TrueOrFalseConfig = {
+  id: 'tf-1',
+  type: 'true-false',
+  question: 'Is this true?',
+  points: 2,
+  correctAnswer: true,
+  displayAs: 'buttons',
+};
+
+const answer: TrueOrFalseAnswer = true;
+
+const handleChange = (answer: QuestionAnswer<TrueOrFalseAnswer>) => {
+  const value: boolean = answer.value;
+  console.log(value ? 'True' : 'False');
+};
+
+const props: TrueOrFalseProps = {
+  config,
+  onAnswerChange: handleChange,
+};
+```
+
+## Best Practices
+
+1. **Choose Appropriate Display**: Use buttons for emphasis, radio for traditional forms, toggle for settings-like questions
+2. **Provide Clear Questions**: State questions unambiguously to avoid confusion
+3. **Use Immediate Feedback**: Help students learn with instant feedback
+4. **Add Context**: Use instructions to clarify what the question is asking
+5. **Include Hints**: Provide progressive hints for struggling students
+6. **Consider Difficulty**: Mark appropriately (true/false questions can be deceptively difficult)
+7. **Add Media**: Use diagrams or images when they aid understanding
+8. **Test Accessibility**: Verify all display styles work with screen readers
+9. **Avoid Ambiguity**: Ensure the correct answer is objectively clear
+10. **Use Strategically**: True/false questions work best for factual knowledge
+
+## Common Patterns
+
+### Answer Checking Helper
+```tsx
+function checkTrueOrFalseAnswer(
+  userAnswer: boolean,
+  correctAnswer: boolean
+): boolean {
+  return userAnswer === correctAnswer;
+}
+```
+
+### Display Style Selector
+```tsx
+function TrueOrFalseWithStyleSelector() {
+  const [displayStyle, setDisplayStyle] = useState<'radio' | 'buttons' | 'toggle'>('buttons');
+
+  return (
+    <div>
+      <div className="style-selector">
+        <button onClick={() => setDisplayStyle('radio')}>Radio</button>
+        <button onClick={() => setDisplayStyle('buttons')}>Buttons</button>
+        <button onClick={() => setDisplayStyle('toggle')}>Toggle</button>
+      </div>
+      
+      <TrueOrFalse 
+        config={{
+          ...config,
+          displayAs: displayStyle,
+        }}
+      />
+    </div>
+  );
+}
+```
+
+### Confidence Level Tracking
+```tsx
+function TrueOrFalseWithConfidence() {
+  const [confidence, setConfidence] = useState<number>(0);
+
+  const handleAnswerChange = (answer: QuestionAnswer<boolean>) => {
+    // Track how quickly the user answered
+    if (answer.timeSpent < 5) {
+      setConfidence(3); // High confidence (quick answer)
+    } else if (answer.timeSpent < 15) {
+      setConfidence(2); // Medium confidence
+    } else {
+      setConfidence(1); // Low confidence (took time)
+    }
+  };
+
+  return (
+    <div>
+      <TrueOrFalse 
+        config={config} 
+        onAnswerChange={handleAnswerChange}
+      />
+      {confidence > 0 && (
+        <p>Confidence level: {confidence}/3</p>
+      )}
+    </div>
+  );
+}
+```
+
+### Answer Statistics
+```tsx
+interface AnswerStats {
+  totalAnswers: number;
+  trueCount: number;
+  falseCount: number;
+  averageTimeSpent: number;
+}
+
+function calculateStats(answers: QuestionAnswer<boolean>[]): AnswerStats {
+  const trueCount = answers.filter(a => a.value === true).length;
+  const totalTime = answers.reduce((sum, a) => sum + (a.timeSpent || 0), 0);
+  
+  return {
+    totalAnswers: answers.length,
+    trueCount,
+    falseCount: answers.length - trueCount,
+    averageTimeSpent: totalTime / answers.length,
+  };
+}
+```
+
+## Related Components
+
+- **BaseQuestion**: Base component for all questions
+- **MultipleChoice**: For multiple option selection
+- **ShortAnswer**: For text-based answers
+- **Essay**: For extended responses
+
+## Related Hooks
+
+- **useQuestionState**: Manage question state
+- **useQuestionContext**: Access question context
+- **useTrueOrFalseValidation**: Enhanced validation (used internally)
+
+## Notes
+
+- Enhanced validation is automatically applied via `useTrueOrFalseValidation` hook
+- The toggle switch uses a checkbox input with `role="switch"` for accessibility
+- Action buttons use `aria-pressed` to indicate selected state
+- Radio buttons are grouped with `role="radiogroup"`
+- Component automatically locks when submission status changes
+- Default display style is `'radio'` if not specified
+- Answer value is `undefined` until user makes a selection
+- Check button only appears when `showCheckButton` prop is `true`
+- All three display styles are fully accessible and keyboard-navigable
