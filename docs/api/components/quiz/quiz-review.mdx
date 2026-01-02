@@ -1,0 +1,871 @@
+---
+id: quiz-review
+title: QuizReview
+sidebar_label: QuizReview
+sidebar_position: 6
+---
+
+# &lt;QuizReview/&gt;
+
+The `QuizReview` component provides a comprehensive summary view of all quiz questions and answers before final submission, allowing users to review and edit their responses.
+
+## Overview
+
+`QuizReview` is a pre-submission review component that displays all quiz questions and their answers in a single view. It handles:
+
+- **Answer Summary**: Overview of answered vs. unanswered questions
+- **Question List**: Complete list of all questions with current answers
+- **Status Indicators**: Visual feedback for answered/unanswered questions
+- **Quick Edit**: Direct navigation to specific questions for editing
+- **Submission Control**: Final submission with review confirmation
+- **Navigation**: Return to quiz or proceed to submit
+- **Warning System**: Highlights unanswered questions
+
+## Import
+```tsx
+import { QuizReview } from '@scinforma/picolms';
+```
+
+## Basic Usage
+
+### Simple Review Screen
+```tsx
+import { Quiz, QuizReview } from '@scinforma/picolms';
+
+<Quiz config={config}>
+  <QuizReview />
+</Quiz>
+```
+
+### Review with Callbacks
+```tsx
+<Quiz config={config}>
+  <QuizReview 
+    onEdit={(questionIndex) => {
+      console.log('Editing question:', questionIndex);
+    }}
+    onSubmit={() => {
+      console.log('Quiz submitted');
+    }}
+  />
+</Quiz>
+```
+
+## Props
+
+### Optional Props
+
+#### `onEdit`
+- **Type**: `(questionIndex: number) => void`
+- **Description**: Callback fired when the user clicks to edit a specific question. Receives the zero-based question index.
+```tsx
+<QuizReview 
+  onEdit={(questionIndex) => {
+    console.log(`User editing question ${questionIndex + 1}`);
+    trackAnalytics('question_edit', { questionIndex });
+  }}
+/>
+```
+
+#### `onSubmit`
+- **Type**: `() => void`
+- **Description**: Callback fired when the user submits the quiz. Called after the internal submission logic.
+```tsx
+<QuizReview 
+  onSubmit={() => {
+    console.log('Quiz submitted successfully');
+    showSuccessMessage('Quiz submitted!');
+    navigate('/results');
+  }}
+/>
+```
+
+#### `className`
+- **Type**: `string`
+- **Default**: `''`
+- **Description**: Additional CSS class names to apply to the review container.
+```tsx
+<QuizReview className="custom-review" />
+```
+
+## Context Requirements
+
+`QuizReview` must be used as a child of the `Quiz` component. It accesses the following from `QuizContext`:
+
+| Context Value | Type | Description |
+|--------------|------|-------------|
+| `state` | `QuizState` | Current quiz state including configuration and answers |
+| `goToQuestion` | `(index: number) => void` | Navigate to a specific question by index |
+| `submitQuiz` | `() => void` | Submit the entire quiz |
+| `exitReviewMode` | `() => void` | Exit review mode and return to quiz |
+
+## Features
+
+### Answer Summary
+
+Displays key statistics at the top of the review:
+
+```tsx
+<QuizReview />
+```
+
+Shows:
+- **Total Questions**: Complete question count
+- **Answered**: Number of questions with answers
+- **Unanswered**: Number of questions without answers
+
+### Question-by-Question Review
+
+Lists all questions with:
+
+- **Question Number**: Sequential numbering (e.g., "Question 1")
+- **Status Badge**: Visual indicator (✓ Answered or ⚠ Not Answered)
+- **Question Text**: Full question content (HTML supported)
+- **User's Answer**: Current answer value if answered
+- **Edit Button**: Quick access to modify the answer
+
+### Status Indicators
+
+Visual feedback for each question:
+
+- **Answered Questions**: Green checkmark (✓) with "Answered" status
+- **Unanswered Questions**: Warning icon (⚠) with "Not Answered" status
+- Different styling for answered vs. unanswered questions
+
+### Quick Edit Navigation
+
+Each question has an edit button that:
+- Exits review mode
+- Navigates directly to that question
+- Allows modification of the answer
+- Returns user to the quiz interface
+
+Button text changes based on status:
+- **Answered**: "Edit Answer"
+- **Unanswered**: "Answer Question"
+
+### Answer Formatting
+
+Displays answers intelligently based on type:
+- **String values**: Displayed as plain text
+- **Array values**: Joined with commas (e.g., "Option A, Option B")
+- **Object values**: JSON stringified for complex answers
+
+## CSS Classes
+
+The component uses these CSS classes with the `picolms-` prefix:
+
+```css
+/* Main container */
+.picolms-quiz-review { }
+
+/* Header section */
+.picolms-quiz-review-header { }
+
+/* Summary section */
+.picolms-quiz-review-summary { }
+.picolms-review-summary-item { }
+.picolms-summary-label { }
+.picolms-summary-value { }
+
+/* Questions section */
+.picolms-quiz-review-questions { }
+.picolms-quiz-review-question { }
+.picolms-quiz-review-question.answered { }
+.picolms-quiz-review-question.unanswered { }
+
+/* Question header */
+.picolms-review-question-header { }
+.picolms-review-question-number { }
+.picolms-review-question-status { }
+.picolms-review-question-status.status-answered { }
+.picolms-review-question-status.status-unanswered { }
+
+/* Question content */
+.picolms-review-question-text { }
+.picolms-review-question-answer { }
+.picolms-review-answer-value { }
+
+/* Edit button */
+.picolms-review-edit-button { }
+
+/* Actions section */
+.picolms-quiz-review-actions { }
+.picolms-review-back-button { }
+.picolms-review-submit-button { }
+```
+
+### Custom Styling
+```tsx
+<QuizReview className="custom-review" />
+```
+
+```css
+.custom-review {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #f7fafc;
+  border-radius: 12px;
+}
+
+.custom-review .picolms-quiz-review-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.custom-review .picolms-quiz-review-header h2 {
+  font-size: 2rem;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.custom-review .picolms-quiz-review-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.custom-review .picolms-review-summary-item {
+  text-align: center;
+  padding: 1rem;
+}
+
+.custom-review .picolms-summary-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
+}
+
+.custom-review .picolms-summary-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.custom-review .picolms-quiz-review-question {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.custom-review .picolms-quiz-review-question.answered {
+  border-left-color: #48bb78;
+}
+
+.custom-review .picolms-quiz-review-question.unanswered {
+  border-left-color: #f6ad55;
+  background-color: #fffaf0;
+}
+
+.custom-review .picolms-review-question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.custom-review .picolms-review-question-number {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #2d3748;
+}
+
+.custom-review .picolms-review-question-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.custom-review .picolms-review-question-status.status-answered {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.custom-review .picolms-review-question-status.status-unanswered {
+  background-color: #fef5e7;
+  color: #c05621;
+}
+
+.custom-review .picolms-review-answer-value {
+  background-color: #edf2f7;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.custom-review .picolms-review-edit-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.custom-review .picolms-review-edit-button:hover {
+  background-color: #5a67d8;
+  transform: translateY(-2px);
+}
+
+.custom-review .picolms-quiz-review-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.custom-review .picolms-review-back-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #e2e8f0;
+  color: #2d3748;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.custom-review .picolms-review-back-button:hover {
+  background-color: #cbd5e0;
+}
+
+.custom-review .picolms-review-submit-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.custom-review .picolms-review-submit-button:hover {
+  background-color: #38a169;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .custom-review .picolms-quiz-review-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .custom-review .picolms-quiz-review-actions {
+    flex-direction: column;
+  }
+}
+```
+
+## Review Flow
+
+The typical review flow works as follows:
+
+1. **User completes questions** in the quiz
+2. **User enters review mode** (via button or automatic trigger)
+3. **Review screen displays** with summary and all questions
+4. **User reviews answers** and identifies issues
+5. **User clicks edit** on specific questions if needed
+6. **System exits review mode** and navigates to that question
+7. **User modifies answer** and returns to review
+8. **User submits quiz** when satisfied with all answers
+
+## Examples
+
+### Basic Review Implementation
+```tsx
+import { Quiz, QuizReview } from '@scinforma/picolms';
+
+function BasicReviewQuiz() {
+  return (
+    <Quiz
+      config={{
+        id: 'review-quiz',
+        title: 'Quiz with Review',
+        questions: questions,
+      }}
+    >
+      <QuizReview />
+    </Quiz>
+  );
+}
+```
+
+### Review with Callbacks
+```tsx
+function CallbackReviewQuiz() {
+  const handleEdit = (questionIndex: number) => {
+    console.log(`Editing question ${questionIndex + 1}`);
+    trackAnalytics('quiz_review_edit', { questionIndex });
+  };
+
+  const handleSubmit = () => {
+    console.log('Quiz submitted from review');
+    showNotification('Quiz submitted successfully!');
+    trackAnalytics('quiz_submit_from_review');
+  };
+
+  return (
+    <Quiz config={config}>
+      <QuizReview 
+        onEdit={handleEdit}
+        onSubmit={handleSubmit}
+      />
+    </Quiz>
+  );
+}
+```
+
+### Review with Confirmation Dialog
+```tsx
+import { useState } from 'react';
+
+function ConfirmReviewQuiz() {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const { state } = useQuizContext();
+  
+  const unansweredCount = state.config.questions.length - 
+    Array.from(state.answers.values()).filter(a => a.isAnswered).length;
+
+  const handleSubmit = () => {
+    if (unansweredCount > 0) {
+      setShowConfirm(true);
+    } else {
+      submitQuiz();
+    }
+  };
+
+  return (
+    <>
+      <QuizReview onSubmit={handleSubmit} />
+      
+      {showConfirm && (
+        <div className="confirmation-dialog">
+          <h3>Unanswered Questions</h3>
+          <p>You have {unansweredCount} unanswered question(s).</p>
+          <p>Do you want to submit anyway?</p>
+          <button onClick={() => {
+            submitQuiz();
+            setShowConfirm(false);
+          }}>
+            Yes, Submit
+          </button>
+          <button onClick={() => setShowConfirm(false)}>
+            Cancel
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+### Review with Time Display
+```tsx
+function TimedReviewQuiz() {
+  const { state, progress } = useQuizContext();
+  
+  return (
+    <div className="timed-review">
+      <div className="review-time-info">
+        <span>Time Spent: {formatTime(progress.timeSpent)}</span>
+        {state.config.timeLimit && (
+          <span>Time Remaining: {formatTime(progress.timeRemaining)}</span>
+        )}
+      </div>
+      <QuizReview />
+    </div>
+  );
+}
+```
+
+### Review with Progress Indicator
+```tsx
+function ProgressReviewQuiz() {
+  const { state } = useQuizContext();
+  
+  const answeredCount = Array.from(state.answers.values())
+    .filter(a => a.isAnswered).length;
+  const totalCount = state.config.questions.length;
+  const completionPercent = (answeredCount / totalCount) * 100;
+
+  return (
+    <div className="progress-review">
+      <div className="completion-indicator">
+        <div className="progress-bar">
+          <div 
+            className="progress-fill"
+            style={{ width: `${completionPercent}%` }}
+          />
+        </div>
+        <span className="completion-text">
+          {completionPercent.toFixed(0)}% Complete
+        </span>
+      </div>
+      <QuizReview />
+    </div>
+  );
+}
+```
+
+### Review with Question Filtering
+```tsx
+import { useState } from 'react';
+
+function FilterableReviewQuiz() {
+  const [filter, setFilter] = useState<'all' | 'answered' | 'unanswered'>('all');
+  const { state } = useQuizContext();
+
+  const filteredQuestions = state.config.questions.filter((q, index) => {
+    const answer = state.answers.get(q.id);
+    const isAnswered = answer?.isAnswered || false;
+    
+    if (filter === 'answered') return isAnswered;
+    if (filter === 'unanswered') return !isAnswered;
+    return true;
+  });
+
+  return (
+    <div className="filterable-review">
+      <div className="filter-controls">
+        <button 
+          className={filter === 'all' ? 'active' : ''}
+          onClick={() => setFilter('all')}
+        >
+          All Questions
+        </button>
+        <button 
+          className={filter === 'answered' ? 'active' : ''}
+          onClick={() => setFilter('answered')}
+        >
+          Answered Only
+        </button>
+        <button 
+          className={filter === 'unanswered' ? 'active' : ''}
+          onClick={() => setFilter('unanswered')}
+        >
+          Unanswered Only
+        </button>
+      </div>
+      <QuizReview />
+    </div>
+  );
+}
+```
+
+### Review with Auto-Save Before Submit
+```tsx
+function AutoSaveReviewQuiz() {
+  const { state } = useQuizContext();
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    
+    try {
+      // Save current state before submission
+      await fetch('/api/quiz/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quizId: state.config.id,
+          answers: Array.from(state.answers.entries()),
+        }),
+      });
+      
+      // Then submit
+      submitQuiz();
+    } catch (error) {
+      console.error('Failed to save:', error);
+      alert('Failed to save progress. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <QuizReview 
+      onSubmit={handleSubmit}
+      className={saving ? 'saving' : ''}
+    />
+  );
+}
+```
+
+### Review with Section Grouping
+```tsx
+function SectionedReviewQuiz() {
+  const { state } = useQuizContext();
+  
+  // Group questions by section (assuming questions have a section property)
+  const questionsBySec tion = state.config.questions.reduce((acc, q, index) => {
+    const section = q.section || 'General';
+    if (!acc[section]) acc[section] = [];
+    acc[section].push({ question: q, index });
+    return acc;
+  }, {} as Record<string, Array<{ question: any; index: number }>>);
+
+  return (
+    <div className="sectioned-review">
+      <div className="picolms-quiz-review-header">
+        <h2>Review Your Answers</h2>
+        <p>Organized by section</p>
+      </div>
+      
+      {Object.entries(questionsBySection).map(([section, questions]) => (
+        <div key={section} className="review-section">
+          <h3 className="section-title">{section}</h3>
+          <div className="section-questions">
+            {questions.map(({ question, index }) => {
+              const answer = state.answers.get(question.id);
+              const isAnswered = answer?.isAnswered || false;
+              
+              return (
+                <div key={question.id} className="review-question-compact">
+                  <span className="question-num">Q{index + 1}</span>
+                  <span className={`status ${isAnswered ? 'answered' : 'unanswered'}`}>
+                    {isAnswered ? '✓' : '⚠'}
+                  </span>
+                  <button onClick={() => goToQuestion(index)}>
+                    {isAnswered ? 'Edit' : 'Answer'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      
+      <div className="picolms-quiz-review-actions">
+        <button onClick={exitReviewMode}>Back</button>
+        <button onClick={submitQuiz}>Submit</button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Review with Print Summary
+```tsx
+function PrintableReviewQuiz() {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="printable-review">
+      <div className="print-hide">
+        <button onClick={handlePrint}>
+          Print Review Summary
+        </button>
+      </div>
+      <QuizReview />
+    </div>
+  );
+}
+```
+
+```css
+@media print {
+  .print-hide {
+    display: none;
+  }
+  
+  .picolms-quiz-review-actions {
+    display: none;
+  }
+  
+  .picolms-review-edit-button {
+    display: none;
+  }
+}
+```
+
+### Review with Warning Messages
+```tsx
+function WarningReviewQuiz() {
+  const { state } = useQuizContext();
+  
+  const unansweredCount = state.config.questions.length - 
+    Array.from(state.answers.values()).filter(a => a.isAnswered).length;
+
+  return (
+    <div className="warning-review">
+      {unansweredCount > 0 && (
+        <div className="warning-banner">
+          <span className="warning-icon">⚠️</span>
+          <div className="warning-content">
+            <strong>Warning:</strong> You have {unansweredCount} unanswered question(s).
+            <br />
+            These will be marked as incorrect if submitted.
+          </div>
+        </div>
+      )}
+      <QuizReview />
+    </div>
+  );
+}
+```
+
+### Review with Sticky Summary
+```tsx
+function StickySummaryReview() {
+  return (
+    <div className="sticky-summary-review">
+      <div className="sticky-summary">
+        <QuizReviewSummary />
+      </div>
+      <QuizReview />
+    </div>
+  );
+}
+```
+
+```css
+.sticky-summary {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+```
+
+## Accessibility
+
+`QuizReview` includes comprehensive accessibility features:
+
+### Semantic HTML
+- Proper heading hierarchy (h2 for main title)
+- Semantic button elements for all actions
+- Clear labeling of all interactive elements
+
+### Visual Indicators
+- Color-coded status badges (✓ and ⚠)
+- Icons supplement color coding
+- High contrast for readability
+
+### Screen Reader Support
+- Descriptive labels for all sections
+- Status information announced clearly
+- Button text indicates current state and action
+
+### Keyboard Navigation
+- All buttons keyboard accessible
+- Logical tab order through review
+- Focus visible on all interactive elements
+
+## TypeScript
+
+The component is fully typed:
+```tsx
+import type { QuizReviewProps } from '@scinforma/picolms';
+
+const reviewProps: QuizReviewProps = {
+  onEdit: (index) => console.log('Edit', index),
+  onSubmit: () => console.log('Submit'),
+  className: 'my-review',
+};
+
+<QuizReview {...reviewProps} />
+```
+
+## Best Practices
+
+1. **Always Show Summary Statistics**: The summary at the top helps users quickly assess completeness.
+
+2. **Highlight Unanswered Questions**: Make it very clear which questions still need attention.
+
+3. **Provide Clear Edit Access**: Make it easy for users to navigate back to specific questions.
+
+4. **Consider Mandatory Review**: For high-stakes assessments, require users to visit review before submitting.
+
+5. **Warn About Unanswered Questions**: Display warnings when unanswered questions remain.
+
+6. **Enable Quick Navigation**: Ensure the edit flow is smooth and returns users to review after changes.
+
+7. **Test Answer Formatting**: Verify that all answer types display correctly in the review.
+
+8. **Mobile Optimize**: Ensure review is readable and usable on small screens.
+
+## Navigation Flow
+
+### Edit Flow
+```
+Review Screen → Click "Edit Answer" → Exit Review Mode → 
+Go to Question → User Edits → User Returns to Review
+```
+
+### Submit Flow
+```
+Review Screen → Click "Submit Quiz" → 
+Quiz Submitted → Results Display
+```
+
+## Performance Considerations
+
+- Review renders all questions at once, suitable for quizzes up to ~50 questions
+- For very large quizzes, consider pagination or virtual scrolling
+- Answer formatting is optimized for different data types
+- HTML content is sanitized before rendering
+
+## Common Issues and Solutions
+
+### Review Not Showing
+**Problem**: Review screen doesn't appear
+**Solution**: Ensure component is used within Quiz context and review mode is active.
+
+```tsx
+// Trigger review mode before showing component
+<button onClick={() => enterReviewMode()}>
+  Review Answers
+</button>
+```
+
+### Edit Not Working
+**Problem**: Edit button doesn't navigate to question
+**Solution**: Verify `goToQuestion` and `exitReviewMode` are available in context.
+
+### Answer Not Displaying
+**Problem**: Answer shows as undefined or [object Object]
+**Solution**: Check answer formatting logic for your question types.
+
+```tsx
+// Custom answer formatter
+const formatCustomAnswer = (answer: any) => {
+  if (answer.type === 'custom') {
+    return answer.customProperty;
+  }
+  return String(answer);
+};
+```
+
+## Related Components
+
+- **Quiz**: Parent container providing review context
+- **QuizNavigation**: Navigation used during quiz taking
+- **QuizResults**: Final results after submission
+- **BaseQuestion**: Individual questions edited from review
+
+## Related Hooks
+
+- **useQuizContext**: Access quiz state and navigation
+- **useReviewMode**: Custom hook for review state management

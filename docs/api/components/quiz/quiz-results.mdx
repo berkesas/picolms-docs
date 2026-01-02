@@ -1,0 +1,902 @@
+---
+id: quiz-results
+title: QuizResults
+sidebar_label: QuizResults
+sidebar_position: 5
+---
+
+# &lt;QuizResults/&gt;
+
+The `QuizResults` component displays comprehensive quiz results including score, pass/fail status, and detailed question-by-question feedback with user answers and correct answers.
+
+## Overview
+
+`QuizResults` is a results display component that shows the outcome of a completed quiz. It handles:
+
+- **Score Summary**: Total score, percentage, and pass/fail status
+- **Question Review**: Detailed breakdown of each question's result
+- **Answer Comparison**: Display of user answers vs. correct answers
+- **Feedback Display**: Individual question feedback from grading
+- **Metadata**: Submission time, attempt number, and passing criteria
+- **Actions**: Retake and close functionality
+- **Error Handling**: Graceful display when no results are available
+
+## Import
+```tsx
+import { QuizResults } from '@scinforma/picolms';
+```
+
+## Basic Usage
+
+### Simple Results Display
+```tsx
+import { Quiz, QuizResults } from '@scinforma/picolms';
+
+<Quiz config={config}>
+  <QuizResults />
+</Quiz>
+```
+
+### Results with Actions
+```tsx
+<Quiz config={config}>
+  <QuizResults 
+    onRetake={() => {
+      console.log('Retaking quiz');
+      // Reset and restart quiz
+    }}
+    onClose={() => {
+      console.log('Closing results');
+      // Navigate away or hide results
+    }}
+  />
+</Quiz>
+```
+
+## Props
+
+### Optional Props
+
+#### `onRetake`
+- **Type**: `() => void`
+- **Description**: Callback fired when the user clicks the "Retake Quiz" button. Use this to reset the quiz state and allow the user to attempt again.
+```tsx
+<QuizResults 
+  onRetake={() => {
+    resetQuizState();
+    navigation.navigate('QuizStart');
+  }}
+/>
+```
+
+#### `onClose`
+- **Type**: `() => void`
+- **Description**: Callback fired when the user clicks the "Close" button. Use this to navigate away from results or hide the results panel.
+```tsx
+<QuizResults 
+  onClose={() => {
+    navigation.navigate('Dashboard');
+  }}
+/>
+```
+
+#### `className`
+- **Type**: `string`
+- **Default**: `''`
+- **Description**: Additional CSS class names to apply to the results container.
+```tsx
+<QuizResults className="custom-results" />
+```
+
+## Context Requirements
+
+`QuizResults` must be used as a child of the `Quiz` component. It accesses the following from `QuizContext`:
+
+| Context Value | Type | Description |
+|--------------|------|-------------|
+| `state` | `QuizState` | Current quiz state including configuration and answers |
+| `loadedResult` | `LoadedQuizResult` | Complete quiz result data with grading information |
+| `hideResults` | `() => void` | Function to hide the results view |
+
+### LoadedQuizResult Object
+
+```tsx
+interface LoadedQuizResult {
+  score: number;                                    // Total points earned
+  maxScore: number;                                 // Maximum possible points
+  percentage: number;                               // Score percentage (0-100)
+  isPassed: boolean;                                // Whether passing score was met
+  submittedAt: string;                             // ISO timestamp of submission
+  attemptNumber: number;                           // Attempt number (1-indexed)
+  gradedAnswers?: Map<string, GradedAnswer>;       // Grading results per question
+}
+```
+
+### GradedAnswer Object
+
+```tsx
+interface GradedAnswer {
+  isCorrect: boolean;     // Whether the answer is correct
+  score: number;          // Points awarded for this question
+  feedback?: string;      // Optional feedback message
+}
+```
+
+## Features
+
+### Score Summary Card
+
+Displays the overall quiz performance:
+
+```tsx
+<QuizResults />
+```
+
+Shows:
+- **Score**: Points earned out of maximum (e.g., "85 / 100")
+- **Percentage**: Score as a percentage (e.g., "85.0%")
+- **Pass/Fail Status**: Visual indicator with checkmark or X
+- **Attempt Number**: Which attempt this result represents
+- **Passing Score**: Required percentage to pass (if configured)
+
+### Question-by-Question Breakdown
+
+Detailed results for each question including:
+
+- **Question Number and Status**: Visual indicator of correct/incorrect
+- **Points Earned**: Score for that question (e.g., "8 / 10 points")
+- **User's Answer**: Formatted display of what the user selected/entered
+- **Correct Answer**: Shown if `config.showCorrectAnswers` is true and answer was incorrect
+- **Feedback**: Individual question feedback if available
+
+### Answer Formatting
+
+The component intelligently formats different answer types:
+
+- **Multiple Choice**: Shows selected option text(s)
+- **True/False**: Displays "True" or "False"
+- **Short Answer**: Shows the text response
+- **Essay**: Displays the full essay text
+- **Fill-in-Blank**: JSON formatted blanks
+- **Matching**: JSON formatted matches
+
+### Submission Metadata
+
+Displays contextual information:
+
+- **Submission Time**: Formatted date and time
+- **Attempt Number**: Current attempt count
+- **Passing Score**: Required percentage (if applicable)
+
+## CSS Classes
+
+The component uses these CSS classes with the `picolms-` prefix:
+
+```css
+/* Main container */
+.picolms-quiz-results { }
+.picolms-quiz-results-error { }
+
+/* Header section */
+.picolms-quiz-results-header { }
+.picolms-quiz-results-date { }
+
+/* Summary section */
+.picolms-quiz-results-summary { }
+.picolms-results-score-card { }
+.picolms-score-main { }
+.picolms-score-value { }
+.picolms-score-divider { }
+.picolms-score-max { }
+.picolms-score-percentage { }
+.picolms-score-status { }
+.picolms-score-status.passed { }
+.picolms-score-status.failed { }
+
+/* Metadata section */
+.picolms-results-metadata { }
+.picolms-metadata-item { }
+.picolms-metadata-label { }
+.picolms-metadata-value { }
+
+/* Questions section */
+.picolms-quiz-results-questions { }
+.picolms-result-question { }
+.picolms-result-question.correct { }
+.picolms-result-question.incorrect { }
+.picolms-result-question-header { }
+.picolms-result-question-number { }
+.picolms-result-question-status { }
+.picolms-result-question-status.status-correct { }
+.picolms-result-question-status.status-incorrect { }
+.picolms-result-question-score { }
+.picolms-result-question-text { }
+
+/* Answer display */
+.picolms-result-answer { }
+.picolms-result-answer-value { }
+.picolms-result-correct-answer { }
+.picolms-result-correct-value { }
+.picolms-result-feedback { }
+
+/* Actions section */
+.picolms-quiz-results-actions { }
+.picolms-results-action-button { }
+.picolms-results-close-button { }
+.picolms-results-retake-button { }
+```
+
+### Custom Styling
+```tsx
+<QuizResults className="custom-results" />
+```
+
+```css
+.custom-results {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-results .picolms-results-score-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.custom-results .picolms-score-value {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.custom-results .picolms-score-percentage {
+  font-size: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.custom-results .picolms-score-status.passed {
+  background-color: #48bb78;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.custom-results .picolms-score-status.failed {
+  background-color: #f56565;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.custom-results .picolms-result-question {
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.custom-results .picolms-result-question.correct {
+  border-color: #48bb78;
+  background-color: #f0fff4;
+}
+
+.custom-results .picolms-result-question.incorrect {
+  border-color: #f56565;
+  background-color: #fff5f5;
+}
+
+.custom-results .picolms-result-feedback {
+  background-color: #edf2f7;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.custom-results .picolms-results-action-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-results .picolms-results-retake-button {
+  background-color: #667eea;
+  color: white;
+}
+
+.custom-results .picolms-results-retake-button:hover {
+  background-color: #5a67d8;
+  transform: translateY(-2px);
+}
+
+.custom-results .picolms-results-close-button {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.custom-results .picolms-results-close-button:hover {
+  background-color: #cbd5e0;
+}
+```
+
+## Error Handling
+
+If no results are available, the component displays an error message:
+
+```tsx
+<div className="picolms-quiz-results-error">
+  No results to display
+</div>
+```
+
+This occurs when:
+- The quiz hasn't been submitted yet
+- Results data failed to load
+- The `loadedResult` is `null` or `undefined`
+
+## Examples
+
+### Basic Results Display
+```tsx
+import { Quiz, QuizResults } from '@scinforma/picolms';
+
+function BasicResultsQuiz() {
+  return (
+    <Quiz
+      config={{
+        id: 'basic-quiz',
+        title: 'Knowledge Check',
+        questions: questions,
+        showScore: true,
+        passingScore: 70,
+        showCorrectAnswers: true,
+      }}
+    >
+      <QuizResults />
+    </Quiz>
+  );
+}
+```
+
+### Results with Actions
+```tsx
+function InteractiveResultsQuiz() {
+  const navigate = useNavigate();
+  
+  const handleRetake = () => {
+    // Reset quiz state
+    localStorage.removeItem('quiz-123-state');
+    window.location.reload();
+  };
+  
+  const handleClose = () => {
+    navigate('/dashboard');
+  };
+
+  return (
+    <Quiz config={config}>
+      <QuizResults 
+        onRetake={handleRetake}
+        onClose={handleClose}
+      />
+    </Quiz>
+  );
+}
+```
+
+### Results with Certificate Generation
+```tsx
+function CertificateResultsQuiz() {
+  const { loadedResult } = useQuizContext();
+  
+  const handleRetake = () => {
+    resetQuiz();
+  };
+  
+  const handleClose = () => {
+    if (loadedResult?.isPassed) {
+      // Generate certificate
+      generateCertificate({
+        name: currentUser.name,
+        course: config.title,
+        score: loadedResult.percentage,
+        date: loadedResult.submittedAt,
+      });
+    }
+    navigate('/courses');
+  };
+
+  return (
+    <Quiz config={config}>
+      <QuizResults 
+        onRetake={handleRetake}
+        onClose={handleClose}
+      />
+      {loadedResult?.isPassed && (
+        <button onClick={generateCertificate}>
+          Download Certificate
+        </button>
+      )}
+    </Quiz>
+  );
+}
+```
+
+### Custom Styled Results
+```tsx
+function StyledResultsQuiz() {
+  return (
+    <Quiz config={config}>
+      <QuizResults className="premium-results-theme" />
+    </Quiz>
+  );
+}
+```
+
+```css
+.premium-results-theme {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(to bottom, #f7fafc, #edf2f7);
+  padding: 2rem;
+}
+
+.premium-results-theme .picolms-quiz-results-header h2 {
+  font-size: 2rem;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.premium-results-theme .picolms-results-score-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+}
+
+.premium-results-theme .picolms-result-question {
+  background: white;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.premium-results-theme .picolms-result-question.correct {
+  border-left-color: #48bb78;
+}
+
+.premium-results-theme .picolms-result-question.incorrect {
+  border-left-color: #f56565;
+}
+
+.premium-results-theme .picolms-result-question:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+```
+
+### Results with Analytics Tracking
+```tsx
+function AnalyticsResultsQuiz() {
+  const { loadedResult, state } = useQuizContext();
+
+  useEffect(() => {
+    if (loadedResult) {
+      // Track quiz completion
+      analytics.track('Quiz Completed', {
+        quizId: state.config.id,
+        score: loadedResult.score,
+        maxScore: loadedResult.maxScore,
+        percentage: loadedResult.percentage,
+        passed: loadedResult.isPassed,
+        attemptNumber: loadedResult.attemptNumber,
+        timestamp: loadedResult.submittedAt,
+      });
+
+      // Track individual question results
+      state.config.questions.forEach((question, index) => {
+        const graded = loadedResult.gradedAnswers?.get(question.id);
+        if (graded) {
+          analytics.track('Question Result', {
+            questionId: question.id,
+            questionNumber: index + 1,
+            correct: graded.isCorrect,
+            score: graded.score,
+            maxScore: question.points,
+          });
+        }
+      });
+    }
+  }, [loadedResult, state.config]);
+
+  return (
+    <QuizResults 
+      onRetake={() => {
+        analytics.track('Quiz Retake Started');
+        resetQuiz();
+      }}
+      onClose={() => {
+        analytics.track('Quiz Results Closed');
+        navigate('/dashboard');
+      }}
+    />
+  );
+}
+```
+
+### Results with Email Summary
+```tsx
+function EmailResultsQuiz() {
+  const { loadedResult, state } = useQuizContext();
+  const [emailSent, setEmailSent] = useState(false);
+
+  const sendResultsEmail = async () => {
+    try {
+      await fetch('/api/send-quiz-results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          quizId: state.config.id,
+          results: loadedResult,
+        }),
+      });
+      setEmailSent(true);
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
+  };
+
+  return (
+    <div>
+      <QuizResults />
+      <div className="email-results-section">
+        <button 
+          onClick={sendResultsEmail}
+          disabled={emailSent}
+        >
+          {emailSent ? '✓ Results Emailed' : 'Email Results to Me'}
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Results with Detailed Breakdown
+```tsx
+function DetailedResultsQuiz() {
+  const { loadedResult, state } = useQuizContext();
+  
+  const statistics = useMemo(() => {
+    if (!loadedResult?.gradedAnswers) return null;
+    
+    const correct = Array.from(loadedResult.gradedAnswers.values())
+      .filter(g => g.isCorrect).length;
+    const total = state.config.questions.length;
+    
+    return {
+      correct,
+      incorrect: total - correct,
+      total,
+      accuracy: ((correct / total) * 100).toFixed(1),
+    };
+  }, [loadedResult, state.config]);
+
+  return (
+    <div className="detailed-results">
+      {statistics && (
+        <div className="results-statistics">
+          <h3>Performance Summary</h3>
+          <div className="stat-grid">
+            <div className="stat-item">
+              <span className="stat-value">{statistics.correct}</span>
+              <span className="stat-label">Correct</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{statistics.incorrect}</span>
+              <span className="stat-label">Incorrect</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{statistics.accuracy}%</span>
+              <span className="stat-label">Accuracy</span>
+            </div>
+          </div>
+        </div>
+      )}
+      <QuizResults />
+    </div>
+  );
+}
+```
+
+### Results with Share Functionality
+```tsx
+function ShareableResultsQuiz() {
+  const { loadedResult, state } = useQuizContext();
+  
+  const shareResults = () => {
+    if (loadedResult?.isPassed) {
+      const text = `I just passed ${state.config.title} with a score of ${loadedResult.percentage.toFixed(1)}%!`;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Quiz Results',
+          text: text,
+          url: window.location.href,
+        });
+      } else {
+        // Fallback to clipboard
+        navigator.clipboard.writeText(text);
+        alert('Results copied to clipboard!');
+      }
+    }
+  };
+
+  return (
+    <div>
+      <QuizResults 
+        onClose={() => navigate('/dashboard')}
+      />
+      {loadedResult?.isPassed && (
+        <button 
+          className="share-button"
+          onClick={shareResults}
+        >
+          Share Your Achievement
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+### Results with Print Functionality
+```tsx
+function PrintableResultsQuiz() {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="printable-results">
+      <div className="print-hide">
+        <button onClick={handlePrint}>
+          Print Results
+        </button>
+      </div>
+      
+      <QuizResults 
+        onRetake={() => resetQuiz()}
+        onClose={() => navigate('/dashboard')}
+      />
+    </div>
+  );
+}
+```
+
+```css
+@media print {
+  .print-hide {
+    display: none;
+  }
+  
+  .picolms-quiz-results-actions {
+    display: none;
+  }
+  
+  .picolms-result-question {
+    page-break-inside: avoid;
+  }
+}
+```
+
+### Results with Modal Display
+```tsx
+function ModalResultsQuiz() {
+  const [showModal, setShowModal] = useState(true);
+
+  return (
+    <>
+      {showModal && (
+        <div className="results-modal-overlay">
+          <div className="results-modal">
+            <button 
+              className="modal-close"
+              onClick={() => setShowModal(false)}
+            >
+              ×
+            </button>
+            <QuizResults 
+              onClose={() => setShowModal(false)}
+              onRetake={() => {
+                setShowModal(false);
+                resetQuiz();
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+```css
+.results-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.results-modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 2rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+```
+
+## Accessibility
+
+`QuizResults` includes accessibility features:
+
+### Semantic HTML
+- Proper heading hierarchy (h2, h3)
+- Semantic elements for structure
+- Clear labeling of scores and status
+
+### Visual Indicators
+- Color-coded correct/incorrect status
+- Icons (✓ and ✗) supplement color
+- High contrast for readability
+
+### Screen Reader Support
+- Descriptive labels for all sections
+- Status information announced clearly
+- Action buttons with clear labels
+
+### Keyboard Navigation
+- All interactive elements keyboard accessible
+- Logical tab order through results
+- Buttons have visible focus states
+
+## TypeScript
+
+The component is fully typed:
+```tsx
+import type { QuizResultsProps } from '@scinforma/picolms';
+
+const resultsProps: QuizResultsProps = {
+  onRetake: () => console.log('Retake'),
+  onClose: () => console.log('Close'),
+  className: 'my-results',
+};
+
+<QuizResults {...resultsProps} />
+```
+
+## Best Practices
+
+1. **Always Provide Actions**: Include either `onRetake` or `onClose` (or both) to give users clear next steps.
+
+2. **Enable Correct Answers for Learning**: Set `config.showCorrectAnswers: true` for practice quizzes to help users learn from mistakes.
+
+3. **Hide Correct Answers for Assessments**: Set `config.showCorrectAnswers: false` for formal assessments to prevent answer sharing.
+
+4. **Track Results**: Use the results data to track user progress and identify areas needing improvement.
+
+5. **Style Pass/Fail Clearly**: Ensure the pass/fail status is visually distinct and easy to understand.
+
+6. **Provide Meaningful Feedback**: Use the `feedback` field in graded answers to give users helpful explanations.
+
+7. **Test with All Question Types**: Verify that all question types format correctly in results.
+
+8. **Consider Mobile Display**: Ensure results are readable on small screens.
+
+## Helper Functions
+
+### formatAnswer()
+
+Formats different answer types for display:
+
+```typescript
+function formatAnswer(
+  value: MultipleChoiceAnswer | any,
+  question: QuestionConfig
+): string
+```
+
+Handles:
+- Multiple choice: Shows option text(s)
+- True/False: Displays boolean as text
+- Short answer/Essay: Shows text response
+- Fill-in-blank/Matching: JSON formatted
+
+### getCorrectAnswer()
+
+Retrieves and formats the correct answer:
+
+```typescript
+function getCorrectAnswer(question: QuestionConfig): string
+```
+
+Returns formatted correct answer based on question type.
+
+## Performance Considerations
+
+- Results are rendered once on load, not continuously
+- Answer formatting is optimized for different types
+- HTML content is sanitized before rendering
+- Large result sets handle efficiently with proper styling
+
+## Common Issues and Solutions
+
+### Results Not Displaying
+**Problem**: Component shows "No results to display"
+**Solution**: Ensure quiz has been submitted and `loadedResult` is populated.
+
+```tsx
+// ❌ Results won't show if quiz not submitted
+<QuizResults />
+
+// ✅ Ensure quiz is in correct state
+{state.status === 'graded' && <QuizResults />}
+```
+
+### Incorrect Answer Formatting
+**Problem**: Answers display as IDs instead of text
+**Solution**: Ensure question configuration includes proper `options` array with `text` fields.
+
+### Actions Not Working
+**Problem**: Buttons don't respond
+**Solution**: Verify callbacks are provided and context is available.
+
+```tsx
+<QuizResults 
+  onRetake={() => {
+    console.log('Retake clicked'); // Add for debugging
+    resetQuiz();
+  }}
+/>
+```
+
+## Related Components
+
+- **Quiz**: Parent container that provides results context
+- **QuizNavigation**: Navigation used during quiz taking
+- **QuizProgressBar**: Progress tracking during quiz
+- **BaseQuestion**: Individual questions shown in results
+
+## Related Hooks
+
+- **useQuizContext**: Access quiz state and results
+- **useQuizResults**: Custom hook for results calculations

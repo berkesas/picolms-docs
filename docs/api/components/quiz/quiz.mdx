@@ -1,0 +1,712 @@
+---
+id: quiz
+title: Quiz
+sidebar_label: Quiz
+sidebar_position: 1
+---
+
+# &lt;Quiz/&gt;
+
+The `Quiz` component is a comprehensive container component for creating interactive quizzes in Pico LMS. It provides complete quiz lifecycle management including question navigation, shuffling, scoring, progress tracking, and result display.
+
+## Overview
+
+`Quiz` is a top-level component that orchestrates the entire quiz experience. It handles:
+
+- **Question Management**: Sequential presentation and navigation
+- **Shuffling**: Deterministic question randomization using Fisher-Yates algorithm
+- **State Management**: Controlled quiz state with auto-save capabilities
+- **Scoring**: Automatic score calculation with pass/fail thresholds
+- **Progress Tracking**: Real-time progress updates and callbacks
+- **Results Display**: Comprehensive score and performance summaries
+- **Storage**: Optional persistence with custom storage managers
+
+## Import
+```tsx
+import { Quiz } from '@scinforma/picolms';
+```
+
+## Basic Usage
+
+### Simple Quiz
+```tsx
+<Quiz
+  config={{
+    id: 'intro-quiz',
+    title: 'Introduction to Biology',
+    questions: [
+      {
+        id: 'q1',
+        type: 'multiple-choice',
+        question: 'What is photosynthesis?',
+        points: 10,
+      },
+      {
+        id: 'q2',
+        type: 'short-answer',
+        question: 'Describe cellular respiration.',
+        points: 15,
+      },
+    ],
+    showScore: true,
+  }}
+/>
+```
+
+### Quiz with Passing Score
+```tsx
+<Quiz
+  config={{
+    id: 'certification-quiz',
+    title: 'Certification Exam',
+    description: 'Complete all questions to earn your certificate',
+    questions: questions,
+    shuffleQuestions: true,
+    showScore: true,
+    passingScore: 75,
+  }}
+  onQuizSubmit={(result) => {
+    console.log('Quiz completed:', result);
+  }}
+/>
+```
+
+## Props
+
+### Required Props
+
+#### `config`
+- **Type**: `QuizConfig`
+- **Description**: Configuration object defining the quiz structure, behavior, and scoring rules.
+```tsx
+config={{
+  id: 'quiz-1',
+  title: 'My Quiz',
+  questions: [...],
+  showScore: true,
+  passingScore: 70,
+}}
+```
+
+### Optional Props
+
+#### `children`
+- **Type**: `ReactNode`
+- **Description**: Custom content to render within the quiz container. Has access to quiz context.
+```tsx
+<Quiz config={config}>
+  <CustomProgressBar />
+  <CustomNavigationButtons />
+</Quiz>
+```
+
+#### `onAnswerChange`
+- **Type**: `(questionId: string, answer: QuestionAnswer) => void`
+- **Description**: Callback fired when any question's answer changes.
+```tsx
+onAnswerChange={(questionId, answer) => {
+  console.log(`Question ${questionId} answered:`, answer.value);
+  logActivity(questionId, answer);
+}}
+```
+
+#### `onQuestionSubmit`
+- **Type**: `(submission: QuestionSubmission) => void`
+- **Description**: Callback fired when an individual question is submitted.
+```tsx
+onQuestionSubmit={(submission) => {
+  console.log('Question submitted:', submission);
+  saveToDatabase(submission);
+}}
+```
+
+#### `onQuizSubmit`
+- **Type**: `(result: QuizResult) => void`
+- **Description**: Callback fired when the entire quiz is completed and submitted.
+```tsx
+onQuizSubmit={(result) => {
+  const passed = (result.score / result.maxScore) * 100 >= 75;
+  if (passed) {
+    awardCertificate(result);
+  }
+}}
+```
+
+#### `onProgressChange`
+- **Type**: `(progress: any) => void`
+- **Description**: Callback fired when quiz progress updates (questions answered, time spent, etc.).
+```tsx
+onProgressChange={(progress) => {
+  updateProgressBar(progress);
+  sendAnalytics(progress);
+}}
+```
+
+#### `renderQuestion`
+- **Type**: `(question: any, index: number) => ReactNode`
+- **Description**: Custom renderer function for individual questions. Overrides default question display.
+```tsx
+renderQuestion={(question, index) => (
+  <div className="custom-question">
+    <h3>Question {index + 1}</h3>
+    <QuestionComponent question={question} />
+  </div>
+)}
+```
+
+#### `loadedResult`
+- **Type**: `LoadedQuizResult`
+- **Description**: Pre-existing quiz result for resuming or reviewing a previous attempt.
+```tsx
+const previousAttempt = loadFromStorage('quiz-123');
+
+<Quiz
+  config={config}
+  loadedResult={previousAttempt}
+/>
+```
+
+#### `storageManager`
+- **Type**: `QuizStorageManager`
+- **Description**: Custom storage manager instance for persisting quiz state and progress.
+```tsx
+import { QuizStorageManager } from '@scinforma/picolms';
+
+const storage = new QuizStorageManager('local');
+
+<Quiz
+  config={config}
+  storageManager={storage}
+/>
+```
+
+#### `autoSaveInterval`
+- **Type**: `number`
+- **Description**: Interval in milliseconds for automatic saving of quiz progress. Requires `storageManager`.
+```tsx
+<Quiz
+  config={config}
+  storageManager={storage}
+  autoSaveInterval={5000} // Save every 5 seconds
+/>
+```
+
+#### `className`
+- **Type**: `string`
+- **Description**: Additional CSS class names to apply to the quiz container.
+```tsx
+<Quiz
+  config={config}
+  className="custom-quiz-theme"
+/>
+```
+
+## QuizConfig Object
+
+The `config` prop accepts a `QuizConfig` object with the following properties:
+
+### Core Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for the quiz (used as seed for shuffling) |
+| `title` | `string` | Yes | Quiz title displayed in the header |
+| `description` | `string` | No | Optional description shown below the title |
+| `instructions` | `ReactNode` | No | Optional instructions displayed before quiz starts |
+| `questions` | `Question[]` | Yes | Array of question configuration objects |
+| `shuffleQuestions` | `boolean` | No | Enable deterministic question randomization (default: `false`) |
+| `showScore` | `boolean` | No | Display score after quiz completion (default: `false`) |
+| `passingScore` | `number` | No | Passing percentage threshold (0-100) |
+
+### Example Configuration
+```tsx
+const config: QuizConfig = {
+  id: 'advanced-quiz-001',
+  title: 'Advanced JavaScript Concepts',
+  description: 'Test your knowledge of modern JavaScript',
+  instructions: (
+    <div>
+      <p>This quiz consists of 10 questions.</p>
+      <p>You must score 80% or higher to pass.</p>
+      <p>Good luck!</p>
+    </div>
+  ),
+  questions: [
+    {
+      id: 'q1',
+      type: 'multiple-choice',
+      question: 'What is a closure?',
+      options: ['A', 'B', 'C', 'D'],
+      correctAnswer: 'A',
+      points: 10,
+    },
+    // ... more questions
+  ],
+  shuffleQuestions: true,
+  showScore: true,
+  passingScore: 80,
+};
+```
+
+## QuizResult Object
+
+The result object passed to `onQuizSubmit` has the following structure:
+```tsx
+interface QuizResult {
+  score: number;                              // Total points earned
+  maxScore: number;                           // Maximum possible points
+  status: 'submitted' | 'graded';            // Quiz completion status
+  answers: Record<string, QuestionAnswer>;   // Map of question IDs to answers
+}
+```
+
+## LoadedQuizResult Object
+
+For resuming or reviewing previous attempts:
+```tsx
+interface LoadedQuizResult {
+  score: number;
+  maxScore: number;
+  answers: Record<string, QuestionAnswer>;
+  status: 'submitted' | 'graded';
+  // Additional result metadata
+}
+```
+
+## Question Shuffling Algorithm
+
+The Quiz component uses the **Fisher-Yates shuffle algorithm** with deterministic seeding to randomize question order while maintaining consistency.
+
+### How It Works
+1. Quiz ID is converted to a numeric seed
+2. A seeded random number generator ensures the same shuffle order for the same quiz ID
+3. Questions are shuffled once when the component mounts and memoized to prevent re-shuffling on re-renders
+
+### Example
+```tsx
+// Same quiz ID always produces the same question order
+<Quiz
+  config={{
+    id: 'quiz-123',  // This ID generates a consistent seed
+    shuffleQuestions: true,
+    questions: [q1, q2, q3, q4, q5],
+  }}
+/>
+// Questions might appear as: q3, q1, q5, q2, q4 (consistent across sessions)
+```
+
+### Implementation Details
+```typescript
+/**
+ * Fisher-Yates shuffle with seeded randomization
+ * Seed is generated from quiz ID for consistency
+ */
+function shuffleArray<T>(array: T[], seed?: number): T[] {
+  const shuffled = [...array];
+  const random = seed ? seededRandom(seed) : Math.random;
+  
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  return shuffled;
+}
+```
+
+## Context
+
+`Quiz` provides a `QuizContext` that child components can access using the `useQuizContext` hook:
+```tsx
+import { useQuizContext } from '@scinforma/picolms';
+
+function CustomQuizControls() {
+  const {
+    state,
+    currentQuestion,
+    showingResults,
+    goToNextQuestion,
+    goToPreviousQuestion,
+    submitQuiz,
+  } = useQuizContext();
+
+  return (
+    <div className="quiz-controls">
+      <p>Question {state.currentQuestionIndex + 1} of {state.totalQuestions}</p>
+      <p>Score: {state.score} / {state.maxScore}</p>
+      <button onClick={goToPreviousQuestion} disabled={state.currentQuestionIndex === 0}>
+        Previous
+      </button>
+      <button onClick={goToNextQuestion}>
+        Next
+      </button>
+    </div>
+  );
+}
+
+<Quiz config={config}>
+  <CustomQuizControls />
+</Quiz>
+```
+
+### Context Values
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `state` | `QuizState` | Current quiz state (score, status, answers, etc.) |
+| `currentQuestion` | `Question` | Currently displayed question object |
+| `showingResults` | `boolean` | Whether results screen is displayed |
+| `goToNextQuestion` | `() => void` | Navigate to next question |
+| `goToPreviousQuestion` | `() => void` | Navigate to previous question |
+| `submitQuiz` | `() => void` | Submit the entire quiz |
+
+## Quiz Status Flow
+
+The quiz progresses through the following states:
+
+1. **Initial/In Progress**: User is answering questions
+2. **Submitted**: All questions answered and quiz submitted
+3. **Graded**: Quiz has been graded (if applicable)
+
+```tsx
+// Status is automatically managed by the component
+state.status === 'initial'     // Quiz in progress
+state.status === 'submitted'   // Quiz completed
+state.status === 'graded'      // Quiz graded (if grading is implemented)
+```
+
+## CSS Classes
+
+The component uses these CSS classes with the `picolms-` prefix:
+
+```css
+/* Main container */
+.picolms-quiz-container { }
+
+/* Header section */
+.picolms-quiz-header { }
+.picolms-quiz-title { }
+.picolms-quiz-description { }
+.picolms-quiz-instructions { }
+
+/* Content area */
+.picolms-quiz-content { }
+.picolms-quiz-question-container { }
+.picolms-quiz-question-number { }
+
+/* Results display */
+.picolms-quiz-results-summary { }
+.picolms-results-heading { }
+.picolms-results-score { }
+.picolms-results-percentage { }
+.picolms-results-status { }
+.picolms-results-passed { }
+.picolms-results-failed { }
+```
+
+### Custom Styling
+```tsx
+<Quiz
+  config={config}
+  className="dark-theme"
+/>
+```
+
+```css
+.dark-theme .picolms-quiz-container {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+```
+
+## Examples
+
+### Quiz with All Features
+```tsx
+import { Quiz, QuizStorageManager } from '@scinforma/picolms';
+
+const storageManager = new QuizStorageManager('local');
+
+function ComprehensiveQuiz() {
+  const handleQuizComplete = (result: QuizResult) => {
+    const percentage = (result.score / result.maxScore) * 100;
+    const passed = percentage >= 75;
+    
+    // Save to backend
+    fetch('/api/quiz-results', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...result,
+        passed,
+        percentage,
+      }),
+    });
+    
+    // Show notification
+    if (passed) {
+      showSuccessMessage('Congratulations! You passed!');
+    } else {
+      showErrorMessage('Keep studying and try again!');
+    }
+  };
+
+  return (
+    <Quiz
+      config={{
+        id: 'comprehensive-quiz',
+        title: 'Final Examination',
+        description: 'This exam covers all course material',
+        instructions: (
+          <ul>
+            <li>Answer all questions carefully</li>
+            <li>You have unlimited time</li>
+            <li>Passing score is 75%</li>
+          </ul>
+        ),
+        questions: courseQuestions,
+        shuffleQuestions: true,
+        showScore: true,
+        passingScore: 75,
+      }}
+      storageManager={storageManager}
+      autoSaveInterval={10000}
+      onAnswerChange={(qId, answer) => {
+        console.log('Answer updated:', qId, answer);
+      }}
+      onQuizSubmit={handleQuizComplete}
+      className="final-exam"
+    >
+      <ProgressTracker />
+      <NavigationButtons />
+    </Quiz>
+  );
+}
+```
+
+### Quiz with Custom Question Renderer
+```tsx
+import ReactMarkdown from 'react-markdown';
+import { MultipleChoiceQuestion, ShortAnswerQuestion } from '@scinforma/picolms';
+
+function CustomRenderedQuiz() {
+  const renderQuestion = (question: any, index: number) => {
+    return (
+      <div className="question-wrapper">
+        <div className="question-header">
+          <span className="question-number">Question {index + 1}</span>
+          <span className="question-points">{question.points} points</span>
+        </div>
+        
+        <div className="question-text">
+          <ReactMarkdown>{question.question}</ReactMarkdown>
+        </div>
+        
+        {question.type === 'multiple-choice' && (
+          <MultipleChoiceQuestion question={question} />
+        )}
+        
+        {question.type === 'short-answer' && (
+          <ShortAnswerQuestion question={question} />
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <Quiz
+      config={config}
+      renderQuestion={renderQuestion}
+    />
+  );
+}
+```
+
+### Resume Previous Attempt
+```tsx
+import { useState, useEffect } from 'react';
+
+function ResumableQuiz() {
+  const [loadedResult, setLoadedResult] = useState<LoadedQuizResult | undefined>();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load previous attempt from storage or API
+    const loadPreviousAttempt = async () => {
+      try {
+        const saved = await fetch('/api/quiz/in-progress/quiz-123').then(r => r.json());
+        setLoadedResult(saved);
+      } catch (error) {
+        console.error('Failed to load previous attempt:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPreviousAttempt();
+  }, []);
+
+  if (loading) {
+    return <div>Loading quiz...</div>;
+  }
+
+  return (
+    <Quiz
+      config={config}
+      loadedResult={loadedResult}
+      onQuizSubmit={(result) => {
+        // Clear saved progress
+        fetch('/api/quiz/in-progress/quiz-123', { method: 'DELETE' });
+        // Save final result
+        fetch('/api/quiz/results', {
+          method: 'POST',
+          body: JSON.stringify(result),
+        });
+      }}
+    />
+  );
+}
+```
+
+### Quiz with Progress Tracking
+```tsx
+function TrackedQuiz() {
+  const [progress, setProgress] = useState({
+    answered: 0,
+    total: 0,
+    timeSpent: 0,
+  });
+
+  return (
+    <>
+      <div className="progress-bar">
+        <div className="progress-info">
+          {progress.answered} of {progress.total} answered
+        </div>
+        <div
+          className="progress-fill"
+          style={{ width: `${(progress.answered / progress.total) * 100}%` }}
+        />
+      </div>
+
+      <Quiz
+        config={config}
+        onProgressChange={(p) => setProgress(p)}
+      />
+    </>
+  );
+}
+```
+
+### Quiz with Auto-Save and Recovery
+```tsx
+import { QuizStorageManager } from '@scinforma/picolms';
+
+function AutoSavedQuiz() {
+  const storage = new QuizStorageManager('local');
+  const [showRecoveryPrompt, setShowRecoveryPrompt] = useState(false);
+  const [savedData, setSavedData] = useState<LoadedQuizResult | null>(null);
+
+  useEffect(() => {
+    // Check for saved progress
+    const saved = storage.load('quiz-123');
+    if (saved && saved.status !== 'submitted') {
+      setSavedData(saved);
+      setShowRecoveryPrompt(true);
+    }
+  }, []);
+
+  if (showRecoveryPrompt) {
+    return (
+      <div className="recovery-prompt">
+        <h2>Continue Previous Attempt?</h2>
+        <p>We found a saved quiz in progress.</p>
+        <button onClick={() => {
+          setShowRecoveryPrompt(false);
+        }}>
+          Continue
+        </button>
+        <button onClick={() => {
+          setSavedData(null);
+          storage.clear('quiz-123');
+          setShowRecoveryPrompt(false);
+        }}>
+          Start Fresh
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <Quiz
+      config={config}
+      loadedResult={savedData}
+      storageManager={storage}
+      autoSaveInterval={3000}
+      onQuizSubmit={() => {
+        storage.clear('quiz-123');
+      }}
+    />
+  );
+}
+```
+
+## TypeScript
+
+The component is fully typed with TypeScript:
+```tsx
+import type { QuizConfig, QuizResult, LoadedQuizResult } from '@scinforma/picolms';
+
+const config: QuizConfig = {
+  id: 'typed-quiz',
+  title: 'TypeScript Quiz',
+  questions: [/* ... */],
+};
+
+const handleSubmit = (result: QuizResult): void => {
+  console.log('Score:', result.score);
+  console.log('Max Score:', result.maxScore);
+  console.log('Answers:', result.answers);
+};
+
+<Quiz config={config} onQuizSubmit={handleSubmit} />
+```
+
+## Best Practices
+
+1. **Unique Quiz IDs**: Always use unique, stable IDs for quizzes, especially when using shuffling. The ID is used as the shuffle seed.
+
+2. **Enable Auto-Save for Long Quizzes**: Use `autoSaveInterval` and `storageManager` for quizzes that may take significant time to complete.
+
+3. **Set Appropriate Passing Scores**: Consider the difficulty and importance of the quiz when setting `passingScore` thresholds.
+
+4. **Provide Clear Instructions**: Use the `instructions` field to explain quiz rules, time limits, and grading criteria.
+
+5. **Handle Submission Events**: Always implement `onQuizSubmit` to persist results to a backend or storage system.
+
+6. **Use Shuffling Thoughtfully**: Enable `shuffleQuestions` for assessments where question order shouldn't provide hints or create dependencies.
+
+7. **Test with Loaded Results**: Ensure your quiz works correctly when resuming from a `loadedResult` to provide a seamless user experience.
+
+8. **Custom Rendering for Complex Content**: Use `renderQuestion` when questions need special formatting, media, or interactive elements.
+
+## Performance Considerations
+
+- Questions are shuffled once during initialization and memoized with `useMemo`
+- Auto-save operations are debounced to prevent excessive storage writes
+- The component re-renders only when necessary state changes occur
+- Large question sets are handled efficiently through lazy evaluation
+
+## Related Components
+
+- **BaseQuestion**: Foundation component for individual questions
+- **MultipleChoiceQuestion**: Specialized multiple choice question component
+- **ShortAnswerQuestion**: Text-based answer component
+- **QuizNavigation**: Navigation controls for quiz progression
+- **QuizResults**: Results display component
+
+## Related Hooks
+
+- **useQuizState**: Internal hook for quiz state management
+- **useQuizContext**: Access quiz context in child components
+- **useQuizProgress**: Track quiz completion progress
+- **useQuizStorage**: Handle quiz persistence and recovery

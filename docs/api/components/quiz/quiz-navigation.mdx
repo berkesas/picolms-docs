@@ -1,0 +1,631 @@
+---
+id: quiz-navigation
+title: QuizNavigation
+sidebar_label: QuizNavigation
+sidebar_position: 3
+---
+
+# &lt;QuizNavigation/&gt;
+
+The `QuizNavigation` component provides navigation controls for moving between questions in a quiz. It includes previous/next buttons, a question position indicator, and an optional visual question list for direct navigation.
+
+## Overview
+
+`QuizNavigation` is a companion component to the `Quiz` component that manages question-to-question navigation. It handles:
+
+- **Sequential Navigation**: Previous/next button controls
+- **Direct Navigation**: Optional question list for jumping to specific questions
+- **Position Tracking**: Display of current question number and total count
+- **Submit Control**: Automatic display of submit button on the last question
+- **Answer Status**: Visual indicators for answered questions
+- **Accessibility**: Full keyboard navigation and ARIA labels
+- **Smart Disabling**: Automatic button state management based on quiz context
+
+## Import
+```tsx
+import { QuizNavigation } from '@scinforma/picolms';
+```
+
+## Basic Usage
+
+### Simple Navigation
+```tsx
+import { Quiz, QuizNavigation } from '@scinforma/picolms';
+
+<Quiz config={config}>
+  <QuizNavigation />
+</Quiz>
+```
+
+### Navigation with Question List
+```tsx
+<Quiz config={config}>
+  <QuizNavigation showQuestionList />
+</Quiz>
+```
+
+## Props
+
+### Optional Props
+
+#### `showQuestionList`
+- **Type**: `boolean`
+- **Default**: `false`
+- **Description**: Whether to display a visual grid of all questions for direct navigation. Only shown if `config.allowNavigation` is true.
+```tsx
+<QuizNavigation showQuestionList />
+```
+
+#### `className`
+- **Type**: `string`
+- **Default**: `''`
+- **Description**: Additional CSS class names to apply to the navigation container.
+```tsx
+<QuizNavigation className="custom-navigation" />
+```
+
+## Context Requirements
+
+`QuizNavigation` must be used as a child of the `Quiz` component. It accesses the following from `QuizContext`:
+
+| Context Value | Type | Description |
+|--------------|------|-------------|
+| `state` | `QuizState` | Current quiz state including answers and configuration |
+| `goToQuestion` | `(index: number) => void` | Navigate to a specific question by index |
+| `nextQuestion` | `() => void` | Navigate to the next question |
+| `previousQuestion` | `() => void` | Navigate to the previous question |
+| `canGoNext` | `boolean` | Whether navigation to next question is allowed |
+| `canGoPrevious` | `boolean` | Whether navigation to previous question is allowed |
+| `submitQuiz` | `() => void` | Submit the entire quiz |
+| `canSubmitQuiz` | `boolean` | Whether quiz submission is allowed |
+
+## Features
+
+### Sequential Navigation
+
+Previous and Next buttons allow users to move through questions in order:
+
+- **Previous Button**: Disabled on the first question
+- **Next Button**: Available when more questions remain
+- **Submit Button**: Automatically replaces Next button on the last question
+
+```tsx
+<Quiz config={config}>
+  <QuizNavigation />
+</Quiz>
+// Shows: [← Previous] [1 / 10] [Next →]
+```
+
+### Direct Navigation
+
+When `showQuestionList` is enabled and `config.allowNavigation` is true, users can click any question number to jump directly to that question:
+
+```tsx
+<Quiz 
+  config={{
+    ...config,
+    allowNavigation: true,
+  }}
+>
+  <QuizNavigation showQuestionList />
+</Quiz>
+```
+
+The question list displays:
+- All question numbers in a grid layout
+- Current question highlighted
+- Answered questions marked with a checkmark (✓)
+- Clickable buttons for direct navigation
+
+### Answer Status Indicators
+
+Visual feedback shows which questions have been answered:
+
+- **Unanswered questions**: Default styling
+- **Answered questions**: Marked with checkmark indicator
+- **Current question**: Highlighted with distinct styling
+
+### Position Tracking
+
+The navigation displays the current position:
+```
+[← Previous] [3 / 15] [Next →]
+```
+
+This helps users understand their progress through the quiz.
+
+## CSS Classes
+
+The component uses these CSS classes with the `picolms-` prefix:
+
+```css
+/* Main container */
+.picolms-quiz-navigation { }
+
+/* Question list section */
+.picolms-quiz-question-list { }
+.picolms-quiz-question-grid { }
+.picolms-quiz-question-item { }
+.picolms-quiz-question-item.current { }
+.picolms-quiz-question-item.answered { }
+.picolms-answered-indicator { }
+
+/* Navigation buttons section */
+.picolms-quiz-nav-buttons { }
+.picolms-quiz-nav-button { }
+.picolms-quiz-prev-button { }
+.picolms-quiz-next-button { }
+.picolms-quiz-submit-button { }
+.picolms-quiz-nav-position { }
+```
+
+### Custom Styling
+```tsx
+<QuizNavigation className="custom-nav" />
+```
+
+```css
+.custom-nav .picolms-quiz-nav-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+}
+
+.custom-nav .picolms-quiz-question-item.answered {
+  background-color: #28a745;
+  color: white;
+}
+
+.custom-nav .picolms-quiz-question-item.current {
+  border: 3px solid #007bff;
+  font-weight: bold;
+}
+```
+
+## Behavior
+
+### Button State Management
+
+The navigation automatically manages button states based on quiz context:
+
+**Previous Button**:
+- Enabled when `currentQuestionIndex > 0`
+- Disabled on the first question
+
+**Next Button**:
+- Enabled when there are more questions ahead
+- Hidden on the last question (replaced by Submit button)
+
+**Submit Button**:
+- Only visible on the last question
+- Enabled based on quiz submission rules (e.g., all required questions answered)
+- Can be disabled by quiz configuration
+
+### Navigation Modes
+
+#### Linear Navigation
+When `config.allowNavigation` is false (default), users can only navigate sequentially:
+```tsx
+<Quiz 
+  config={{
+    ...config,
+    allowNavigation: false, // Default
+  }}
+>
+  <QuizNavigation />
+</Quiz>
+```
+
+#### Free Navigation
+When `config.allowNavigation` is true, users can jump to any question:
+```tsx
+<Quiz 
+  config={{
+    ...config,
+    allowNavigation: true,
+  }}
+>
+  <QuizNavigation showQuestionList />
+</Quiz>
+```
+
+## Examples
+
+### Basic Navigation Controls
+```tsx
+import { Quiz, QuizNavigation } from '@scinforma/picolms';
+
+function BasicQuizWithNavigation() {
+  return (
+    <Quiz
+      config={{
+        id: 'basic-quiz',
+        title: 'Quiz with Navigation',
+        questions: questions,
+      }}
+    >
+      <div className="quiz-content">
+        {/* Question rendering */}
+      </div>
+      <QuizNavigation />
+    </Quiz>
+  );
+}
+```
+
+### Navigation with Question Overview
+```tsx
+function QuizWithOverview() {
+  return (
+    <Quiz
+      config={{
+        id: 'overview-quiz',
+        title: 'Quiz with Question Overview',
+        questions: questions,
+        allowNavigation: true, // Enable direct navigation
+      }}
+    >
+      <QuizNavigation showQuestionList />
+    </Quiz>
+  );
+}
+```
+
+### Custom Styled Navigation
+```tsx
+function StyledQuizNavigation() {
+  return (
+    <Quiz config={config}>
+      <QuizNavigation 
+        showQuestionList
+        className="custom-navigation-theme"
+      />
+    </Quiz>
+  );
+}
+```
+
+```css
+.custom-navigation-theme {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.custom-navigation-theme .picolms-quiz-nav-button {
+  min-width: 120px;
+  height: 44px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.custom-navigation-theme .picolms-quiz-nav-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.custom-navigation-theme .picolms-quiz-question-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.custom-navigation-theme .picolms-quiz-question-item {
+  aspect-ratio: 1;
+  border: 2px solid #dee2e6;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.custom-navigation-theme .picolms-quiz-question-item:hover {
+  border-color: #007bff;
+  background-color: #e7f3ff;
+}
+
+.custom-navigation-theme .picolms-quiz-question-item.current {
+  background-color: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+
+.custom-navigation-theme .picolms-quiz-question-item.answered {
+  background-color: #d4edda;
+  border-color: #28a745;
+}
+```
+
+### Split Layout with Sidebar Navigation
+```tsx
+function SidebarNavigationQuiz() {
+  return (
+    <Quiz
+      config={{
+        ...config,
+        allowNavigation: true,
+      }}
+    >
+      <div className="quiz-layout">
+        <aside className="quiz-sidebar">
+          <QuizNavigation showQuestionList />
+        </aside>
+        <main className="quiz-main">
+          {/* Question content */}
+        </main>
+      </div>
+    </Quiz>
+  );
+}
+```
+
+```css
+.quiz-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.quiz-sidebar {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+.quiz-sidebar .picolms-quiz-nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .quiz-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .quiz-sidebar {
+    position: static;
+  }
+}
+```
+
+### Navigation with Progress Indicator
+```tsx
+function NavigationWithProgress() {
+  const { state } = useQuizContext();
+  
+  const answeredCount = state.answers.size;
+  const totalQuestions = state.config.questions.length;
+  const progressPercentage = (answeredCount / totalQuestions) * 100;
+
+  return (
+    <div className="navigation-with-progress">
+      <div className="progress-bar">
+        <div 
+          className="progress-fill"
+          style={{ width: `${progressPercentage}%` }}
+        />
+        <span className="progress-text">
+          {answeredCount} of {totalQuestions} answered
+        </span>
+      </div>
+      <QuizNavigation showQuestionList />
+    </div>
+  );
+}
+
+<Quiz config={config}>
+  <NavigationWithProgress />
+</Quiz>
+```
+
+### Conditional Submit Button
+```tsx
+function ConditionalSubmitNavigation() {
+  const { state, canSubmitQuiz } = useQuizContext();
+  const allAnswered = state.answers.size === state.config.questions.length;
+
+  return (
+    <div>
+      <QuizNavigation />
+      {!allAnswered && (
+        <p className="warning-message">
+          Please answer all questions before submitting.
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+### Navigation with Keyboard Shortcuts
+```tsx
+import { useEffect } from 'react';
+
+function KeyboardNavigationQuiz() {
+  const { nextQuestion, previousQuestion, canGoNext, canGoPrevious } = useQuizContext();
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowRight' && canGoNext) {
+        nextQuestion();
+      } else if (event.key === 'ArrowLeft' && canGoPrevious) {
+        previousQuestion();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [nextQuestion, previousQuestion, canGoNext, canGoPrevious]);
+
+  return (
+    <Quiz config={config}>
+      <div className="keyboard-hint">
+        Use ← → arrow keys to navigate
+      </div>
+      <QuizNavigation showQuestionList />
+    </Quiz>
+  );
+}
+```
+
+## Accessibility
+
+`QuizNavigation` includes comprehensive accessibility features:
+
+### ARIA Labels
+- Each button has descriptive `aria-label` attributes
+- Current question marked with `aria-current="step"`
+- Question list items have contextual labels
+
+### Keyboard Navigation
+- All navigation controls are keyboard accessible
+- Focus management for sequential navigation
+- Tab order follows logical flow
+
+### Screen Reader Support
+- Status announcements for navigation changes
+- Clear indication of current position
+- Answer status communicated for question list items
+
+### Example ARIA Implementation
+```tsx
+// Previous button
+<button
+  aria-label="Previous question"
+  disabled={!canGoPrevious}
+>
+  ← Previous
+</button>
+
+// Question list item
+<button
+  aria-label={`Go to question ${index + 1}`}
+  aria-current={isCurrent ? 'step' : undefined}
+>
+  {index + 1}
+</button>
+
+// Submit button
+<button
+  aria-label="Submit quiz"
+  disabled={!canSubmitQuiz}
+>
+  Submit Quiz
+</button>
+```
+
+## TypeScript
+
+The component is fully typed:
+```tsx
+import type { QuizNavigationProps } from '@scinforma/picolms';
+
+const navigationProps: QuizNavigationProps = {
+  showQuestionList: true,
+  className: 'my-navigation',
+};
+
+<QuizNavigation {...navigationProps} />
+```
+
+## Best Practices
+
+1. **Always Include Navigation**: Unless you have a custom navigation solution, always include `QuizNavigation` in your quiz for a complete user experience.
+
+2. **Enable Question List for Long Quizzes**: For quizzes with 10+ questions, enable `showQuestionList` to help users track progress and navigate efficiently.
+
+3. **Allow Free Navigation for Practice Quizzes**: Set `config.allowNavigation: true` for practice quizzes where users should be able to review and change answers.
+
+4. **Restrict Navigation for Timed Assessments**: Keep `config.allowNavigation: false` for formal assessments where question order matters or to prevent answer changing.
+
+5. **Position Navigation Consistently**: Place navigation in the same location (typically at the bottom of the quiz container) across all quizzes for consistency.
+
+6. **Style for Visibility**: Ensure navigation buttons are clearly visible and distinguishable from quiz content.
+
+7. **Test Accessibility**: Verify that all navigation controls work with keyboard-only navigation and screen readers.
+
+8. **Provide Visual Feedback**: Use the answered indicators to help users track which questions they've completed.
+
+## Common Patterns
+
+### Bottom Fixed Navigation
+```tsx
+<Quiz config={config}>
+  <div className="quiz-content">
+    {/* Questions */}
+  </div>
+  <div className="fixed-navigation">
+    <QuizNavigation />
+  </div>
+</Quiz>
+```
+
+```css
+.fixed-navigation {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+```
+
+### Navigation with Confirmation
+```tsx
+function NavigationWithConfirmation() {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const { submitQuiz } = useQuizContext();
+
+  const handleSubmitClick = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = () => {
+    submitQuiz();
+    setShowConfirm(false);
+  };
+
+  return (
+    <>
+      <QuizNavigation />
+      {showConfirm && (
+        <div className="confirmation-modal">
+          <p>Are you sure you want to submit?</p>
+          <button onClick={handleConfirm}>Yes, Submit</button>
+          <button onClick={() => setShowConfirm(false)}>Cancel</button>
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+## Performance Considerations
+
+- Navigation state is efficiently managed through context
+- Question list renders only visible questions
+- Button state calculations are optimized to prevent unnecessary re-renders
+- Event handlers are stable and don't cause re-renders
+
+## Related Components
+
+- **Quiz**: Parent container component that provides context
+- **QuizProgress**: Alternative progress tracking component
+- **QuizResults**: Results display shown after submission
+- **BaseQuestion**: Individual question component
+
+## Related Hooks
+
+- **useQuizContext**: Access quiz state and navigation functions
+- **useQuizNavigation**: Custom hook for building alternative navigation UIs
+- **useQuizProgress**: Track completion progress

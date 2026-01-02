@@ -1,0 +1,743 @@
+---
+id: quiz-progress-bar
+title: QuizProgressBar
+sidebar_label: QuizProgressBar
+sidebar_position: 4
+---
+
+# &lt;QuizProgressBar/&gt;
+
+The `QuizProgressBar` component displays real-time progress information for a quiz, including completion percentage, answered question count, time spent, and optional time remaining countdown.
+
+## Overview
+
+`QuizProgressBar` is a visual feedback component that helps users track their progress through a quiz. It handles:
+
+- **Visual Progress Bar**: Animated bar showing completion percentage
+- **Question Tracking**: Display of answered vs. total questions
+- **Time Management**: Time spent tracking and optional countdown timer
+- **Warning States**: Visual alerts when time is running low
+- **Accessibility**: Full ARIA support for screen readers
+- **Customization**: Flexible display options for different use cases
+
+## Import
+```tsx
+import { QuizProgressBar } from '@scinforma/picolms';
+```
+
+## Basic Usage
+
+### Simple Progress Bar
+```tsx
+import { Quiz, QuizProgressBar } from '@scinforma/picolms';
+
+<Quiz config={config}>
+  <QuizProgressBar />
+  {/* Quiz content */}
+</Quiz>
+```
+
+### Minimal Progress Display
+```tsx
+<Quiz config={config}>
+  <QuizProgressBar 
+    showProgressBar={false}
+    showTimeRemaining={false}
+  />
+</Quiz>
+```
+
+## Props
+
+### Optional Props
+
+#### `showTimeRemaining`
+- **Type**: `boolean`
+- **Default**: `true`
+- **Description**: Whether to display the countdown timer. Only shown if `config.timeLimit` is set in the quiz configuration.
+```tsx
+<QuizProgressBar showTimeRemaining />
+```
+
+#### `showAnsweredCount`
+- **Type**: `boolean`
+- **Default**: `true`
+- **Description**: Whether to display the count of answered questions vs. total questions.
+```tsx
+<QuizProgressBar showAnsweredCount />
+```
+
+#### `showProgressBar`
+- **Type**: `boolean`
+- **Default**: `true`
+- **Description**: Whether to display the visual progress bar with percentage.
+```tsx
+<QuizProgressBar showProgressBar />
+```
+
+#### `className`
+- **Type**: `string`
+- **Default**: `''`
+- **Description**: Additional CSS class names to apply to the progress container.
+```tsx
+<QuizProgressBar className="custom-progress" />
+```
+
+## Context Requirements
+
+`QuizProgressBar` must be used as a child of the `Quiz` component. It accesses the following from `QuizContext`:
+
+| Context Value | Type | Description |
+|--------------|------|-------------|
+| `state` | `QuizState` | Current quiz state including configuration |
+| `progress` | `ProgressInfo` | Real-time progress tracking data |
+
+### ProgressInfo Object
+
+```tsx
+interface ProgressInfo {
+  percentComplete: number;      // Completion percentage (0-100)
+  answeredQuestions: number;    // Number of questions answered
+  totalQuestions: number;       // Total number of questions
+  timeSpent: number;           // Time spent in seconds
+  timeRemaining?: number;      // Time remaining in seconds (if timeLimit set)
+}
+```
+
+## Features
+
+### Visual Progress Bar
+
+A graphical representation of quiz completion:
+
+```tsx
+<QuizProgressBar showProgressBar />
+```
+
+- Animated fill bar that grows as questions are answered
+- Percentage display (0-100%)
+- Accessible with ARIA progressbar role
+- Smooth transitions as progress updates
+
+### Question Counter
+
+Shows how many questions have been answered:
+
+```tsx
+<QuizProgressBar showAnsweredCount />
+```
+
+Displays: `Answered: 7 / 15`
+
+### Time Tracking
+
+#### Time Spent
+Always displayed by default, showing elapsed time:
+- Format: `MM:SS` (e.g., "5:23")
+- Updates in real-time
+- Useful for analytics and performance tracking
+
+#### Time Remaining
+Optional countdown timer for timed quizzes:
+
+```tsx
+<Quiz 
+  config={{
+    ...config,
+    timeLimit: 1800, // 30 minutes
+  }}
+>
+  <QuizProgressBar showTimeRemaining />
+</Quiz>
+```
+
+- Only shown when `config.timeLimit` is set
+- Format: `MM:SS` (e.g., "12:45")
+- Visual warning when time is low (< 60 seconds)
+- Automatically triggers submission when time expires
+
+### Time Warning State
+
+When time remaining drops below 60 seconds, the component applies a `time-warning` class for visual emphasis:
+
+```css
+.picolms-quiz-progress-time.time-warning {
+  color: #dc3545;
+  font-weight: bold;
+  animation: pulse 1s infinite;
+}
+```
+
+## CSS Classes
+
+The component uses these CSS classes with the `picolms-` prefix:
+
+```css
+/* Main container */
+.picolms-quiz-progress { }
+
+/* Progress bar section */
+.picolms-quiz-progress-bar-container { }
+.picolms-quiz-progress-bar { }
+.picolms-quiz-progress-fill { }
+.picolms-quiz-progress-percentage { }
+
+/* Info section */
+.picolms-quiz-progress-info { }
+.picolms-quiz-progress-answered { }
+.picolms-quiz-progress-time { }
+.picolms-quiz-progress-time.time-warning { }
+.picolms-quiz-progress-time-spent { }
+
+/* Labels and values */
+.picolms-progress-label { }
+.picolms-progress-value { }
+```
+
+### Custom Styling
+```tsx
+<QuizProgressBar className="custom-progress" />
+```
+
+```css
+.custom-progress {
+  background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  color: white;
+}
+
+.custom-progress .picolms-quiz-progress-bar {
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.custom-progress .picolms-quiz-progress-fill {
+  height: 100%;
+  background-color: #48bb78;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+}
+
+.custom-progress .picolms-progress-label {
+  opacity: 0.9;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.custom-progress .picolms-progress-value {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.custom-progress .picolms-quiz-progress-time.time-warning {
+  animation: urgent-pulse 0.5s infinite;
+}
+
+@keyframes urgent-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+```
+
+## Time Formatting
+
+The component uses a consistent time format across all displays:
+
+### Format Function
+```typescript
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+};
+```
+
+### Example Outputs
+- `0` seconds → `"0:00"`
+- `45` seconds → `"0:45"`
+- `90` seconds → `"1:30"`
+- `3661` seconds → `"61:01"`
+
+## Examples
+
+### Complete Progress Display
+```tsx
+import { Quiz, QuizProgressBar } from '@scinforma/picolms';
+
+function QuizWithProgress() {
+  return (
+    <Quiz
+      config={{
+        id: 'timed-quiz',
+        title: 'Timed Assessment',
+        questions: questions,
+        timeLimit: 1200, // 20 minutes
+      }}
+    >
+      <QuizProgressBar 
+        showProgressBar
+        showAnsweredCount
+        showTimeRemaining
+      />
+      {/* Quiz content */}
+    </Quiz>
+  );
+}
+```
+
+### Minimal Progress Info
+```tsx
+function MinimalProgressQuiz() {
+  return (
+    <Quiz config={config}>
+      <QuizProgressBar 
+        showProgressBar={false}
+        showTimeRemaining={false}
+        showAnsweredCount
+      />
+    </Quiz>
+  );
+}
+```
+
+### Custom Styled Progress
+```tsx
+function StyledProgressQuiz() {
+  return (
+    <Quiz config={config}>
+      <QuizProgressBar className="gradient-progress" />
+    </Quiz>
+  );
+}
+```
+
+```css
+.gradient-progress {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.gradient-progress .picolms-quiz-progress-bar-container {
+  margin-bottom: 1rem;
+}
+
+.gradient-progress .picolms-quiz-progress-bar {
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+}
+
+.gradient-progress .picolms-quiz-progress-fill {
+  background: linear-gradient(to right, #48bb78, #38a169);
+  box-shadow: 0 0 10px rgba(72, 187, 120, 0.6);
+}
+
+.gradient-progress .picolms-quiz-progress-percentage {
+  color: white;
+  font-weight: 600;
+}
+
+.gradient-progress .picolms-progress-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: white;
+}
+
+.gradient-progress .picolms-progress-label {
+  opacity: 0.8;
+  margin-right: 0.5rem;
+}
+
+.gradient-progress .picolms-progress-value {
+  font-weight: 700;
+}
+```
+
+### Sticky Header Progress
+```tsx
+function StickyProgressQuiz() {
+  return (
+    <Quiz config={config}>
+      <div className="sticky-progress-header">
+        <QuizProgressBar />
+      </div>
+      {/* Quiz content */}
+    </Quiz>
+  );
+}
+```
+
+```css
+.sticky-progress-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  border-bottom: 2px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sticky-progress-header .picolms-quiz-progress {
+  padding: 1rem;
+}
+```
+
+### Progress with Milestone Indicators
+```tsx
+function MilestoneProgressQuiz() {
+  const { progress } = useQuizContext();
+  
+  const getMilestone = () => {
+    if (progress.percentComplete >= 100) return '🎉 Complete!';
+    if (progress.percentComplete >= 75) return '⭐ Almost there!';
+    if (progress.percentComplete >= 50) return '💪 Halfway!';
+    if (progress.percentComplete >= 25) return '🚀 Good start!';
+    return '📝 Just beginning';
+  };
+
+  return (
+    <div className="milestone-progress">
+      <div className="milestone-badge">{getMilestone()}</div>
+      <QuizProgressBar />
+    </div>
+  );
+}
+
+<Quiz config={config}>
+  <MilestoneProgressQuiz />
+</Quiz>
+```
+
+### Circular Progress Variant
+```tsx
+function CircularProgressQuiz() {
+  const { progress } = useQuizContext();
+  
+  return (
+    <div className="circular-progress-container">
+      <svg width="120" height="120">
+        <circle
+          cx="60"
+          cy="60"
+          r="50"
+          fill="none"
+          stroke="#e2e8f0"
+          strokeWidth="10"
+        />
+        <circle
+          cx="60"
+          cy="60"
+          r="50"
+          fill="none"
+          stroke="#48bb78"
+          strokeWidth="10"
+          strokeDasharray={`${progress.percentComplete * 3.14} 314`}
+          transform="rotate(-90 60 60)"
+        />
+      </svg>
+      <div className="circular-progress-text">
+        {Math.round(progress.percentComplete)}%
+      </div>
+      <QuizProgressBar showProgressBar={false} />
+    </div>
+  );
+}
+```
+
+### Progress with Analytics Tracking
+```tsx
+function AnalyticsProgressQuiz() {
+  const { progress } = useQuizContext();
+
+  useEffect(() => {
+    // Track progress milestones
+    if (progress.percentComplete === 25) {
+      analytics.track('Quiz 25% Complete');
+    } else if (progress.percentComplete === 50) {
+      analytics.track('Quiz 50% Complete');
+    } else if (progress.percentComplete === 75) {
+      analytics.track('Quiz 75% Complete');
+    } else if (progress.percentComplete === 100) {
+      analytics.track('Quiz 100% Complete', {
+        timeSpent: progress.timeSpent,
+      });
+    }
+  }, [progress.percentComplete, progress.timeSpent]);
+
+  return <QuizProgressBar />;
+}
+
+<Quiz config={config}>
+  <AnalyticsProgressQuiz />
+</Quiz>
+```
+
+### Multi-Section Progress Display
+```tsx
+function DetailedProgressQuiz() {
+  const { state, progress } = useQuizContext();
+  const { config } = state;
+
+  return (
+    <div className="detailed-progress">
+      <div className="progress-header">
+        <h3>Quiz Progress</h3>
+        <span className="progress-status">
+          {progress.percentComplete === 100 ? 'Complete' : 'In Progress'}
+        </span>
+      </div>
+      
+      <QuizProgressBar />
+      
+      <div className="progress-stats">
+        <div className="stat">
+          <span className="stat-label">Questions</span>
+          <span className="stat-value">
+            {progress.answeredQuestions} / {progress.totalQuestions}
+          </span>
+        </div>
+        <div className="stat">
+          <span className="stat-label">Average Time</span>
+          <span className="stat-value">
+            {Math.round(progress.timeSpent / Math.max(progress.answeredQuestions, 1))}s
+          </span>
+        </div>
+        {config.timeLimit && (
+          <div className="stat">
+            <span className="stat-label">Pace</span>
+            <span className="stat-value">
+              {progress.timeRemaining! > 0 ? 'On Track' : 'Time Up'}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### Progress with Time Alerts
+```tsx
+import { useEffect, useState } from 'react';
+
+function AlertProgressQuiz() {
+  const { progress, state } = useQuizContext();
+  const [showAlert, setShowAlert] = useState(false);
+  const { config } = state;
+
+  useEffect(() => {
+    if (config.timeLimit && progress.timeRemaining !== undefined) {
+      // Alert when 5 minutes remaining
+      if (progress.timeRemaining === 300) {
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 5000);
+      }
+      // Alert when 1 minute remaining
+      if (progress.timeRemaining === 60) {
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 5000);
+      }
+    }
+  }, [progress.timeRemaining, config.timeLimit]);
+
+  return (
+    <div className="alert-progress-container">
+      {showAlert && (
+        <div className="time-alert">
+          ⏰ {Math.floor(progress.timeRemaining! / 60)} minute(s) remaining!
+        </div>
+      )}
+      <QuizProgressBar />
+    </div>
+  );
+}
+```
+
+### Compact Mobile Progress
+```tsx
+function MobileProgressQuiz() {
+  return (
+    <Quiz config={config}>
+      <div className="mobile-progress">
+        <QuizProgressBar 
+          showProgressBar
+          showAnsweredCount
+          showTimeRemaining
+          className="mobile-optimized"
+        />
+      </div>
+    </Quiz>
+  );
+}
+```
+
+```css
+.mobile-optimized .picolms-quiz-progress-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.mobile-optimized .picolms-progress-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.mobile-optimized .picolms-progress-value {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .mobile-optimized .picolms-quiz-progress-percentage {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-optimized .picolms-quiz-progress-bar {
+    height: 6px;
+  }
+}
+```
+
+## Accessibility
+
+`QuizProgressBar` includes comprehensive accessibility features:
+
+### ARIA Attributes
+
+The progress bar includes proper ARIA roles and attributes:
+
+```tsx
+<div
+  className="picolms-quiz-progress-bar"
+  role="progressbar"
+  aria-valuenow={progress.percentComplete}
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-label="Quiz progress"
+>
+```
+
+### Screen Reader Announcements
+
+- Progress percentage is announced as it updates
+- Time remaining announces at key intervals
+- Question count updates are communicated
+- Warning states are emphasized for screen readers
+
+### Keyboard Navigation
+
+- No keyboard interaction required (display-only component)
+- Information is programmatically accessible
+- Focus is never trapped in the progress display
+
+## TypeScript
+
+The component is fully typed:
+```tsx
+import type { QuizProgressBarProps } from '@scinforma/picolms';
+
+const progressProps: QuizProgressBarProps = {
+  showTimeRemaining: true,
+  showAnsweredCount: true,
+  showProgressBar: true,
+  className: 'my-progress',
+};
+
+<QuizProgressBar {...progressProps} />
+```
+
+## Best Practices
+
+1. **Always Show Progress**: Include `QuizProgressBar` to provide users with clear feedback on their progress through the quiz.
+
+2. **Position at Top**: Place the progress bar at or near the top of the quiz interface for constant visibility.
+
+3. **Use Sticky Positioning**: For long quizzes, make the progress bar sticky so users can always see their progress.
+
+4. **Enable Time Display for Timed Quizzes**: When using `config.timeLimit`, always show `timeRemaining` to help users manage their time.
+
+5. **Style Warning States**: Customize the `time-warning` class to ensure low-time alerts are noticeable but not alarming.
+
+6. **Test with Real Data**: Ensure progress calculations are accurate across different quiz configurations.
+
+7. **Optimize for Mobile**: Use responsive styling to ensure progress information is readable on small screens.
+
+8. **Consider Question Count**: For quizzes with many questions, the answered count is especially valuable.
+
+## Performance Considerations
+
+- Progress updates are throttled to prevent excessive re-renders
+- Time formatting is optimized with simple math operations
+- CSS transitions handle animation smoothly without JavaScript
+- Component only re-renders when progress data actually changes
+
+## Common Issues and Solutions
+
+### Progress Not Updating
+**Problem**: Progress bar doesn't update when questions are answered.
+**Solution**: Ensure the component is used inside a `Quiz` component with proper context.
+
+```tsx
+// ❌ Wrong - Outside Quiz context
+<QuizProgressBar />
+
+// ✅ Correct - Inside Quiz context
+<Quiz config={config}>
+  <QuizProgressBar />
+</Quiz>
+```
+
+### Time Remaining Not Showing
+**Problem**: Time remaining doesn't display.
+**Solution**: Set `timeLimit` in quiz config and enable `showTimeRemaining`.
+
+```tsx
+<Quiz 
+  config={{
+    ...config,
+    timeLimit: 1800, // Required for time remaining
+  }}
+>
+  <QuizProgressBar showTimeRemaining />
+</Quiz>
+```
+
+### Styling Not Applied
+**Problem**: Custom styles don't appear.
+**Solution**: Ensure CSS specificity is high enough to override defaults.
+
+```css
+/* ❌ Too general */
+.picolms-quiz-progress-bar {
+  background: red;
+}
+
+/* ✅ Specific enough */
+.custom-progress .picolms-quiz-progress-bar {
+  background: red;
+}
+```
+
+## Related Components
+
+- **Quiz**: Parent container component that provides progress context
+- **QuizNavigation**: Navigation controls that complement progress display
+- **QuizResults**: Final results shown after quiz completion
+- **BaseQuestion**: Individual question components that update progress
+
+## Related Hooks
+
+- **useQuizContext**: Access quiz state and progress data
+- **useQuizProgress**: Custom hook for progress calculations
+- **useTimer**: Internal hook for time tracking
